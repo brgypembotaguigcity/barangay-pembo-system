@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Barangay Pembo System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #48bb78 0%, #38b2ac 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #48bb78, #38b2ac, #4fd1c5, #81e6d9);
+            background-size: 300% 100%;
+            animation: gradient 3s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.3);
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .title {
+            background: linear-gradient(135deg, #48bb78, #38b2ac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 15px 18px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            box-sizing: border-box;
+            background: white;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #48bb78;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-password:hover {
+            color: #38b2ac;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38b2ac 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #48bb78;
+            color: #48bb78;
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            background: #48bb78;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .otp-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(72, 187, 120, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(72, 187, 120, 0.1);
+        }
+
+        .otp-section h3 {
+            color: #38a169;
+            margin-bottom: 15px;
+        }
+
+        .otp-section p {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .message {
+            margin-top: 15px;
+            color: #e53e3e;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            color: #38a169;
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid rgba(72, 187, 120, 0.2);
+        }
+
+        .message.error {
+            background: rgba(229, 62, 62, 0.1);
+            border: 1px solid rgba(229, 62, 62, 0.2);
+        }
+
+        .strength {
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .strength.medium {
+            color: #d69e2e;
+            background: rgba(214, 158, 46, 0.1);
+        }
+
+        .strength.strong {
+            color: #38a169;
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 30px 20px;
+                max-width: 90%;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 28px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Terms Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-content h2 {
+            color: #48bb78;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .modal-content h3 {
+            color: #38b2ac;
+            margin: 20px 0 10px;
+            font-size: 20px;
+        }
+
+        .modal-content p, .modal-content ul {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .modal-content ul {
+            padding-left: 25px;
+        }
+
+        .modal-content li {
+            margin-bottom: 8px;
+        }
+
+        .close-modal {
+            color: #e53e3e;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-wrapper">
+            <div class="login-box fade-in">
+                <img src="images/Barangay.jpg" alt="Barangay Pembo Logo" class="logo">
+                <h1 class="title">Pembo System</h1>
+                <h2>Create Your Account</h2>
+                
+                <form id="signupForm" class="form-group">
+                    <div class="input-group">
+                        <label for="email">Email Address:</label>
+                        <input type="email" id="email" placeholder="Enter your email address" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password:</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="Create a strong password" required>
+                            <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+                        </div>
+                    </div>
+                    <p id="passwordStrength" class="strength"></p>
+                    <div class="input-group">
+                        <label for="category">Select Category:</label>
+                        <select id="category" required>
+                            <option value="" disabled selected>Choose your category</option>
+                            <option value="resident">Resident</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Terms and Conditions -->
+                    <div class="input-group" style="text-align: left;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 400; text-transform: none; letter-spacing: normal;">
+                            <input type="checkbox" id="terms" required style="width: auto; margin-top: 4px; cursor: pointer; accent-color: #48bb78;">
+                            <span style="color: #4a5568; font-size: 14px; line-height: 1.6;">
+                                I agree to the <a href="#" onclick="showTerms(event)" style="color: #48bb78; text-decoration: underline; font-weight: 600;">Terms and Conditions</a> and <a href="#" onclick="showPrivacy(event)" style="color: #48bb78; text-decoration: underline; font-weight: 600;">Privacy Policy</a>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn">Create Account</button>
+                </form>
+                
+                <div id="otpSection" class="otp-section" style="display: none;">
+                    <h3>Verify Your Email</h3>
+                    <p>We've sent a 6-digit verification code to your email address. Please enter it below:</p>
+                    <div class="input-group">
+                        <input type="text" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" required>
+                    </div>
+                    <button onclick="verifyOTP()" class="btn">Verify Email</button>
+                </div>
+                
+                <p id="message" class="message"></p>
+                
+                <a href="index.html" class="btn btn-outline" style="margin-top: 20px;">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:3000';
+
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const icon = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+
+        function checkPasswordStrength(password) {
+            const strength = document.getElementById('passwordStrength');
+            if (!strength) return;
+            
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[@$!%*?&]/.test(password)) score++;
+            
+            if (password.length === 0) {
+                strength.textContent = '';
+                strength.className = 'strength';
+            } else if (score < 3) {
+                strength.textContent = 'Weak Password - Add more characters';
+                strength.className = 'strength weak';
+            } else if (score < 5) {
+                strength.textContent = 'Medium Password - Almost there!';
+                strength.className = 'strength medium';
+            } else {
+                strength.textContent = 'Strong Password - Perfect!';
+                strength.className = 'strength strong';
+            }
+        }
+
+        // Password strength monitoring
+        document.getElementById('password').addEventListener('input', (e) => {
+            checkPasswordStrength(e.target.value);
+        });
+
+        // Sign Up Form
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const category = document.getElementById('category').value;
+            const messageElem = document.getElementById('message');
+            
+            messageElem.textContent = '';
+            messageElem.classList.remove('success', 'error');
+
+            // Validate password strength
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[@$!%*?&]/.test(password)) score++;
+
+            if (score < 3) {
+                messageElem.textContent = 'Password is too weak. Please use a stronger password.';
+                messageElem.classList.add('error');
+                return;
+            }
+
+            messageElem.textContent = 'Creating account...';
+            messageElem.classList.add('success');
+
+            try {
+                const res = await fetch(`${apiUrl}/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, category })
+                });
+                const data = await res.json();
+                
+                console.log('Signup response:', data); // Debug
+                
+                messageElem.textContent = data.message;
+                
+                if (res.status === 201) {
+                    document.getElementById('signupForm').style.display = 'none';
+                    document.getElementById('otpSection').style.display = 'block';
+                    messageElem.classList.add('success');
+                    messageElem.classList.remove('error');
+                } else {
+                    messageElem.classList.add('error');
+                    messageElem.classList.remove('success');
+                }
+            } catch (err) {
+                console.error('Signup error:', err);
+                messageElem.textContent = 'Error during sign-up. Make sure the server is running.';
+                messageElem.classList.add('error');
+                messageElem.classList.remove('success');
+            }
+        });
+
+        async function verifyOTP() {
+            const email = document.getElementById('email').value;
+            const otp = document.getElementById('otp').value;
+            const messageElem = document.getElementById('message');
+            
+            messageElem.textContent = '';
+            messageElem.classList.remove('success', 'error');
+
+            if (otp.length !== 6) {
+                messageElem.textContent = 'Please enter a valid 6-digit OTP';
+                messageElem.classList.add('error');
+                return;
+            }
+
+            messageElem.textContent = 'Verifying OTP...';
+            messageElem.classList.add('success');
+
+            try {
+                const res = await fetch(`${apiUrl}/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp })
+                });
+                const data = await res.json();
+                
+                console.log('OTP verification response:', data); // Debug
+                
+                messageElem.textContent = data.message;
+                
+                if (res.status === 200) {
+                    messageElem.classList.add('success');
+                    messageElem.classList.remove('error');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    messageElem.classList.add('error');
+                    messageElem.classList.remove('success');
+                }
+            } catch (err) {
+                console.error('OTP verification error:', err);
+                messageElem.textContent = 'Error verifying OTP. Please try again.';
+                messageElem.classList.add('error');
+                messageElem.classList.remove('success');
+            }
+        }
+
+        // Check if server is running on page load
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch(`${apiUrl}/`);
+                console.log('Server is running!');
+            } catch (err) {
+                console.error('Server is not running. Please start your Node.js server with: node server.js');
+                const messageElem = document.getElementById('message');
+                messageElem.textContent = 'Warning: Server connection failed. Please make sure the server is running.';
+                messageElem.classList.add('error');
+            }
+        });
+
+        // Terms and Conditions Modal
+        function showTerms(e) {
+            e.preventDefault();
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+                    <h2>📜 Terms and Conditions</h2>
+                    
+                    <p><strong>Last Updated:</strong> November 17, 2025</p>
+                    
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>By creating an account with Barangay Pembo System, you agree to comply with and be bound by these Terms and Conditions.</p>
+                    
+                    <h3>2. User Responsibilities</h3>
+                    <ul>
+                        <li>Provide accurate and complete information during registration</li>
+                        <li>Maintain the confidentiality of your account credentials</li>
+                        <li>Use the system only for legitimate barangay-related purposes</li>
+                        <li>Not share your account with others</li>
+                    </ul>
+                    
+                    <h3>3. Acceptable Use</h3>
+                    <p>Users must not:</p>
+                    <ul>
+                        <li>Submit false or fraudulent applications</li>
+                        <li>Attempt to access unauthorized areas of the system</li>
+                        <li>Upload malicious content or viruses</li>
+                        <li>Harass or abuse barangay officials or staff</li>
+                    </ul>
+                    
+                    <h3>4. Privacy and Data Protection</h3>
+                    <p>Your personal information will be handled in accordance with our Privacy Policy and applicable data protection laws.</p>
+                    
+                    <h3>5. Service Availability</h3>
+                    <p>We strive to maintain system availability but do not guarantee uninterrupted access. The barangay reserves the right to modify or discontinue services.</p>
+                    
+                    <h3>6. Termination</h3>
+                    <p>The barangay may suspend or terminate your account if you violate these terms or engage in fraudulent activities.</p>
+                    
+                    <h3>7. Changes to Terms</h3>
+                    <p>We reserve the right to update these Terms and Conditions. Continued use after changes constitutes acceptance.</p>
+                    
+                    <p style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                        <strong>Contact:</strong> For questions, contact Barangay Pembo at pembo@barangay.gov.ph
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        function showPrivacy(e) {
+            e.preventDefault();
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+                    <h2>🔒 Privacy Policy</h2>
+                    
+                    <p><strong>Effective Date:</strong> November 17, 2025</p>
+                    
+                    <h3>1. Information We Collect</h3>
+                    <p>We collect the following information:</p>
+                    <ul>
+                        <li><strong>Personal Information:</strong> Email address, name, contact number, address</li>
+                        <li><strong>Document Information:</strong> Valid IDs, proof of residency, application details</li>
+                        <li><strong>Usage Data:</strong> Login times, IP addresses, system interactions</li>
+                    </ul>
+                    
+                    <h3>2. How We Use Your Information</h3>
+                    <ul>
+                        <li>Process barangay document applications</li>
+                        <li>Schedule and manage appointments</li>
+                        <li>Verify resident identity and residency</li>
+                        <li>Send notifications and updates</li>
+                        <li>Improve system security and functionality</li>
+                        <li>Comply with legal requirements</li>
+                    </ul>
+                    
+                    <h3>3. Data Sharing</h3>
+                    <p>Your information will only be shared:</p>
+                    <ul>
+                        <li>With authorized barangay officials for legitimate purposes</li>
+                        <li>With government agencies when required by law</li>
+                        <li>We will NEVER sell your personal information to third parties</li>
+                    </ul>
+                    
+                    <h3>4. Data Security</h3>
+                    <p>We implement security measures including:</p>
+                    <ul>
+                        <li>Encrypted password storage</li>
+                        <li>Secure authentication systems</li>
+                        <li>Regular security audits</li>
+                        <li>Access controls for barangay staff</li>
+                    </ul>
+                    
+                    <h3>5. Your Rights</h3>
+                    <p>You have the right to:</p>
+                    <ul>
+                        <li>Access your personal data</li>
+                        <li>Request corrections to inaccurate information</li>
+                        <li>Request deletion of your account (subject to legal requirements)</li>
+                        <li>Withdraw consent for data processing</li>
+                    </ul>
+                    
+                    <h3>6. Data Retention</h3>
+                    <p>We retain your information for as long as necessary to provide services and comply with legal obligations. Application records may be kept for archival purposes.</p>
+                    
+                    <h3>7. Cookies</h3>
+                    <p>We use session cookies to maintain your login status and improve user experience.</p>
+                    
+                    <h3>8. Children's Privacy</h3>
+                    <p>Our system is not intended for use by individuals under 18 without parental consent.</p>
+                    
+                    <p style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                        <strong>Contact:</strong> For privacy concerns, email pembo@barangay.gov.ph
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) modal.remove();
+            });
+        }
+    </script>
+</body>
+</html>

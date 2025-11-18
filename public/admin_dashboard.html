@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Barangay Pembo System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #f3e8ff 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            padding: 25px 20px;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            margin-bottom: 40px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .menu-item.active {
+            background: white;
+            color: #2563eb;
+        }
+
+        .menu-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .logout-btn {
+            margin-top: 30px;
+            padding: 12px 16px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1f2937;
+        }
+
+        .header p {
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-btn:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .stat-card.yellow {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .stat-card.purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .stat-info h3 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stat-icon {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        /* Content Section */
+        .content-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            color: #1f2937;
+        }
+
+        .export-btn {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-badge.open {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.resolved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Application Card */
+        .application-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .application-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-title h3 {
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .app-details {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .app-details p {
+            margin-bottom: 5px;
+        }
+
+        .app-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+
+        .btn-download {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #2563eb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .coming-soon h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .coming-soon p {
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .app-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .app-actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        /* Notification Dropdown */
+.notification-dropdown {
+    position: absolute;
+    top: 80px;
+    right: 30px;
+    width: 400px;
+    max-height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    z-index: 1000;
+    overflow: hidden;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.notification-header h3 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.notification-list {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.notification-item:hover {
+    background: #f9fafb;
+}
+
+.notification-item.unread {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.notification-icon.appointment {
+    background: #dbeafe;
+}
+
+.notification-icon.application {
+    background: #fef3c7;
+}
+
+.notification-icon.complaint {
+    background: #fee2e2;
+}
+
+.notification-icon.payment {
+    background: #d1fae5;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-content h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.notification-content p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 4px 0;
+}
+
+.notification-time {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.notification-badge {
+    display: none;
+}
+
+.notification-badge.active {
+    display: block;
+}
+
+/* Close notification dropdown when clicking outside */
+@media (max-width: 768px) {
+    .notification-dropdown {
+        width: calc(100vw - 40px);
+        right: 20px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>Barangay Pembo</h1>
+                <p>Admin Portal</p>
+            </div>
+
+            <nav>
+                <div class="menu-item active" onclick="showSection('dashboard')">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    Dashboard
+                </div>
+                <div class="menu-item" onclick="showSection('applications')">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                    Applications
+                </div>
+                <div class="menu-item" onclick="showSection('appointments')">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                    Appointments
+                </div>
+                <div class="menu-item" onclick="showSection('complaints')">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                    Complaints
+                </div>
+                <div class="menu-item" onclick="showSection('residents')">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    Residents
+                </div>
+                <div class="menu-item" onclick="showSection('payments')">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                    Payments
+                </div>
+            </nav>
+
+            <button class="logout-btn" onclick="logout()">
+                <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle;" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                </svg>
+                Logout
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+            <div>
+                <h1>Welcome, Admin</h1>
+                <p>Barangay Pembo Management System</p>
+            </div>
+            <div style="position: relative;">
+                <button class="notification-btn" onclick="toggleNotifications()">
+                    <svg width="24" height="24" fill="none" stroke="#6b7280" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span class="notification-badge" id="notificationBadge"></span>
+                </button>
+                
+                <!-- Notification Dropdown -->
+                <div id="notificationDropdown" class="notification-dropdown hidden">
+                    <div class="notification-header">
+                        <h3>Notifications</h3>
+                        <button onclick="markAllAsRead()" style="background: none; border: none; color: white; cursor: pointer; font-size: 14px; font-weight: 600;">Mark all as read</button>
+                    </div>
+                    <div id="notificationList" class="notification-list">
+                        <p style="text-align: center; padding: 20px; color: #6b7280;">No new notifications</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- 🆕 NOTIFICATION DROPDOWN -->
+<div id="notificationDropdown" class="notification-dropdown hidden">
+    <div class="notification-header">
+        <h3>Notifications</h3>
+        <button onclick="markAllAsRead()" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 14px; font-weight: 600;">Mark all as read</button>
+    </div>
+    <div id="notificationList" class="notification-list">
+        <p style="text-align: center; padding: 20px; color: #6b7280;">No new notifications</p>
+    </div>
+</div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section-content">
+                <h2 style="font-size: 28px; color: #1f2937; margin-bottom: 20px;">Admin Dashboard Overview</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-info">
+                            <h3 id="totalApps">0</h3>
+                            <p>Total Applications</p>
+                        </div>
+                        <div class="stat-icon">📄</div>
+                    </div>
+
+                    <div class="stat-card yellow">
+                        <div class="stat-info">
+                            <h3 id="pendingApps">0</h3>
+                            <p>Pending</p>
+                        </div>
+                        <div class="stat-icon">⏱</div>
+                    </div>
+
+                    <div class="stat-card green">
+                        <div class="stat-info">
+                            <h3 id="approvedApps">0</h3>
+                            <p>Approved</p>
+                        </div>
+                        <div class="stat-icon">✓</div>
+                    </div>
+
+                    <div class="stat-card purple">
+                        <div class="stat-info">
+                            <h3 id="totalResidents">0</h3>
+                            <p>Total Residents</p>
+                        </div>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white;">
+                    <div class="stat-info">
+                        <h3 id="pendingPayments">0</h3>
+                        <p>Pending Payments</p>
+                    </div>
+                    <div class="stat-icon">💳</div>
+                </div>
+                <div class="content-section">
+                    <h2>Recent Applications</h2>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Resident</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentApplicationsTable">
+                                <tr><td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applications Section -->
+            <div id="applicationsSection" class="section-content hidden">
+                <div class="section-header">
+                    <h2>Manage Applications</h2>
+                    <button class="export-btn" onclick="exportData('applications')">Export Records</button>
+                </div>
+
+                <div id="applicationsList">
+                    <p style="text-align: center; padding: 40px; color: #6b7280;">Loading applications...</p>
+                </div>
+            </div>
+
+            <!-- Appointments Section -->
+            <div id="appointmentsSection" class="section-content hidden">
+                <h2 style="margin-bottom: 20px;">Appointment Schedule</h2>
+                <div id="appointmentsList">
+                    <p style="text-align: center; padding: 40px; color: #6b7280;">Loading appointments...</p>
+                </div>
+            </div>
+
+            <!-- Complaints Section -->
+            <div id="complaintsSection" class="section-content hidden">
+                <h2 style="margin-bottom: 20px;">Complaints & Feedback</h2>
+                <div id="complaintsList">
+                    <p style="text-align: center; padding: 40px; color: #6b7280;">Loading complaints...</p>
+                </div>
+            </div>
+
+            <!-- Residents Section -->
+<div id="residentsSection" class="section-content hidden">
+    <div class="section-header">
+        <h2>Registered Residents</h2>
+        <button class="export-btn" onclick="exportData('residents')">Export List</button>
+    </div>
+    <div id="residentsList">
+        <p style="text-align: center; padding: 40px; color: #6b7280;">Loading residents...</p>
+    </div>
+</div>
+
+   <!-- Payments Section -->
+<div id="paymentsSection" class="section-content hidden">
+    <div class="section-header">
+        <h2>Payment Transactions</h2>
+        <button class="export-btn" onclick="exportData('payments')">Export Records</button>
+    </div>
+    <div id="paymentsList">
+        <p style="text-align: center; padding: 40px; color: #6b7280;">Loading payments...</p>
+    </div>
+</div>
+
+    <script>
+        const apiUrl = 'http://localhost:3000';
+        
+        // Data arrays
+        let applications = [];
+        let appointments = [];
+        let complaints = [];
+        let residents = [];
+        let payments = [];
+
+        // Check if user is admin
+        function checkAdminAuth() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            
+            if (!token || role !== 'admin') {
+                alert('Please login as admin first');
+                window.location.href = 'admin.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Fetch real data from backend
+        async function fetchDashboardData() {
+    if (!checkAdminAuth()) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        // Fetch applications
+        const appsRes = await fetch(`${apiUrl}/admin/applications`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (appsRes.ok) {
+            applications = await appsRes.json();
+        }
+        
+        // Fetch appointments
+        const apptsRes = await fetch(`${apiUrl}/appointments`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (apptsRes.ok) {
+            appointments = await apptsRes.json();
+            console.log('✅ Appointments loaded:', appointments.length); // Debug log
+        }
+        
+        // Fetch complaints
+        const complaintsRes = await fetch(`${apiUrl}/complaints`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (complaintsRes.ok) {
+            complaints = await complaintsRes.json();
+        }
+        
+        // Fetch residents
+        const residentsRes = await fetch(`${apiUrl}/admin/residents`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (residentsRes.ok) {
+            residents = await residentsRes.json();
+        }
+        
+        // Fetch payments
+        const paymentsRes = await fetch(`${apiUrl}/admin/payments`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (paymentsRes.ok) {
+            payments = await paymentsRes.json();
+        }
+        
+        // Update UI
+        updateStats();
+        loadRecentApplications();
+        loadNotifications(); // 🆕 Load notifications
+        
+        // 🆕 AUTO-RELOAD CURRENT SECTION
+        const currentSection = document.querySelector('.menu-item.active');
+        if (currentSection) {
+            const sectionName = currentSection.textContent.trim().toLowerCase();
+            if (sectionName.includes('appointment')) {
+                loadAppointments();
+            }
+        }
+        
+    } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+    }
+}
+
+        // Navigation
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+            
+            // Remove active class from all menu items
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            
+            // Add active class to corresponding menu item
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                if (item.getAttribute('onclick')?.includes(section)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Load data for that section
+            if (section === 'applications') loadApplications();
+            if (section === 'appointments') loadAppointments();
+            if (section === 'complaints') loadComplaints();
+            if (section === 'residents') loadResidents();
+            if (section === 'payments') loadPayments();
+        }
+
+        // Load Recent Applications Table
+        function loadRecentApplications() {
+            const tbody = document.getElementById('recentApplicationsTable');
+            
+            if (applications.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">No applications yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = applications.slice(0, 5).map(app => `
+                <tr>
+                    <td>${app.email}</td>
+                    <td>${app.type}</td>
+                    <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+                    <td><span class="status-badge ${app.status.toLowerCase()}">${app.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+// ✅ UPDATED: Load Applications with FILTER and SEARCH
+function loadApplications() {
+    const list = document.getElementById('applicationsList');
+    
+    if (applications.length === 0) {
+        list.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No applications submitted yet</p>';
+        return;
+    }
+    
+    // Add Filter and Search UI
+    list.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                <!-- Search Bar -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔍 Search Applications</label>
+                    <input type="text" id="searchApplications" placeholder="Search by name, email, ID..." 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                        onkeyup="filterApplications()">
+                </div>
+                
+                <!-- Status Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📊 Status</label>
+                    <select id="filterAppStatus" onchange="filterApplications()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="all">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                
+                <!-- Document Type Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📄 Document Type</label>
+                    <select id="filterAppType" onchange="filterApplications()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="all">All Types</option>
+                        <option value="Barangay Clearance">Barangay Clearance</option>
+                        <option value="Certificate of Residency">Certificate of Residency</option>
+                        <option value="Certificate of Indigency">Certificate of Indigency</option>
+                        <option value="Business Permit">Business Permit</option>
+                    </select>
+                </div>
+                
+                <!-- Payment Status Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">💳 Payment Status</label>
+                    <select id="filterPaymentStatus" onchange="filterApplications()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="all">All Payments</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Pending">Pending Verification</option>
+                        <option value="none">No Payment Info</option>
+                    </select>
+                </div>
+                
+                <!-- Sort By -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔄 Sort By</label>
+                    <select id="sortApplications" onchange="filterApplications()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name">Name (A-Z)</option>
+                    </select>
+                </div>
+                
+                <!-- Reset Button -->
+                <div>
+                    <button onclick="resetApplicationFilters()" 
+                        style="width: 100%; padding: 10px 15px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                        🔄 Reset Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Results Count -->
+            <div id="appResultsCount" style="margin-top: 15px; color: #6b7280; font-size: 14px; font-weight: 600;"></div>
+        </div>
+        
+        <div id="applicationsListFiltered"></div>
+    `;
+    
+    // Initial display
+    filterApplications();
+}
+
+// Filter Applications Function
+function filterApplications() {
+    const searchTerm = document.getElementById('searchApplications')?.value.toLowerCase() || '';
+    const statusFilter = document.getElementById('filterAppStatus')?.value || 'all';
+    const typeFilter = document.getElementById('filterAppType')?.value || 'all';
+    const paymentFilter = document.getElementById('filterPaymentStatus')?.value || 'all';
+    const sortBy = document.getElementById('sortApplications')?.value || 'newest';
+    
+    // Filter applications
+    let filtered = applications.filter(app => {
+        const matchesSearch = 
+            app.firstName?.toLowerCase().includes(searchTerm) ||
+            app.lastName?.toLowerCase().includes(searchTerm) ||
+            app.email?.toLowerCase().includes(searchTerm) ||
+            app._id?.toLowerCase().includes(searchTerm);
+        
+        const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+        const matchesType = typeFilter === 'all' || app.type === typeFilter;
+        
+        let matchesPayment = true;
+        if (paymentFilter === 'Verified') matchesPayment = app.paymentStatus === 'Verified';
+        if (paymentFilter === 'Pending') matchesPayment = app.paymentStatus === 'Pending';
+        if (paymentFilter === 'none') matchesPayment = !app.gcashReference;
+        
+        return matchesSearch && matchesStatus && matchesType && matchesPayment;
+    });
+    
+    // Sort applications
+    if (sortBy === 'newest') {
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === 'oldest') {
+        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === 'name') {
+        filtered.sort((a, b) => (a.firstName || '').localeCompare(b.firstName || ''));
+    }
+    
+    // Update results count
+    const countElem = document.getElementById('appResultsCount');
+    if (countElem) {
+        countElem.textContent = `Showing ${filtered.length} of ${applications.length} applications`;
+    }
+    
+    // Display filtered results
+    const container = document.getElementById('applicationsListFiltered');
+    if (!container) return;
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No applications match your filters</p>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(app => `
+        <div class="application-card">
+            <div class="app-header">
+                <div class="app-title">
+                    <h3>${app.firstName} ${app.lastName}</h3>
+                    <span class="status-badge ${app.status.toLowerCase()}">${app.status}</span>
+                </div>
+                <div class="app-actions">
+                    ${app.status === 'Pending' ? `
+    <button class="btn btn-approve" onclick="approveApplication('${app._id}')">✓ Approve</button>
+    <button class="btn btn-reject" onclick="rejectApplication('${app._id}')">✗ Reject</button>
+` : ''}
+                </div>
+            </div>
+            <div class="app-details">
+                <p><strong>Email:</strong> ${app.email}</p>
+                <p><strong>Document Type:</strong> ${app.type}</p>
+                <p><strong>Contact:</strong> ${app.contact || 'N/A'}</p>
+                <p><strong>Address:</strong> ${app.address || 'N/A'}</p>
+                <p><strong>Date of Birth:</strong> ${app.dateOfBirth ? new Date(app.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
+                ${app.purpose ? `<p><strong>Purpose:</strong> ${app.purpose}</p>` : ''}
+                <p><strong>Date Applied:</strong> ${new Date(app.createdAt).toLocaleDateString()}</p>
+                <p><strong>Application ID:</strong> ${app._id}</p>
+                ${app.gcashReference ? `
+                    <div style="margin-top: 15px; padding: 15px; background: #f0f9ff; border-left: 4px solid #007dff; border-radius: 8px;">
+                        <p style="font-weight: 700; color: #007dff; margin-bottom: 10px;">💰 GCash Payment Information</p>
+                        <p style="color: #333;"><strong>Reference Number:</strong> ${app.gcashReference}</p>
+                        <p style="color: #333;"><strong>Amount:</strong> ₱${app.paymentAmount || 100}.00</p>
+                        <p style="color: #333;">
+                            <strong>Payment Status:</strong> 
+                            <span class="status-badge ${app.paymentStatus?.toLowerCase() || 'pending'}">${app.paymentStatus || 'Pending Verification'}</span>
+                        </p>
+                        ${app.paymentStatus === 'Pending' ? `
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button class="btn btn-approve" style="padding: 8px 16px; font-size: 14px;" onclick="verifyPayment('${app._id}', 'Verified')">✓ Verify Payment</button>
+                                <button class="btn btn-reject" style="padding: 8px 16px; font-size: 14px;" onclick="verifyPayment('${app._id}', 'Rejected')">✗ Reject Payment</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : `
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                        ⚠️ No payment information provided
+                    </div>
+                `}
+                ${app.validId || app.proofOfAddress ? `
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                        <p style="font-weight: 600; margin-bottom: 10px;">📎 Uploaded Documents:</p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            ${app.validId ? `
+                                <a href="${apiUrl}/${app.validId}" target="_blank" class="btn btn-download" style="padding: 8px 16px; font-size: 14px;">
+                                    View Valid ID
+                                </a>
+                            ` : '<span style="color: #ef4444;">❌ No Valid ID</span>'}
+                            
+                            ${app.proofOfAddress ? `
+                                <a href="${apiUrl}/${app.proofOfAddress}" target="_blank" class="btn btn-download" style="padding: 8px 16px; font-size: 14px;">
+                                    View Proof of Address
+                                </a>
+                            ` : '<span style="color: #ef4444;">❌ No Proof of Address</span>'}
+                        </div>
+                    </div>
+                ` : `
+                    <div style="margin-top: 15px; padding: 10px; background: #fee2e2; border-radius: 8px; color: #991b1b;">
+                        ⚠️ Warning: No documents uploaded (Incomplete application)
+                    </div>
+                `}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Reset Application Filters
+function resetApplicationFilters() {
+    document.getElementById('searchApplications').value = '';
+    document.getElementById('filterAppStatus').value = 'all';
+    document.getElementById('filterAppType').value = 'all';
+    document.getElementById('filterPaymentStatus').value = 'all';
+    document.getElementById('sortApplications').value = 'newest';
+    filterApplications();
+}
+
+// ✅ UPDATED: Load Appointments with FILTER
+function loadAppointments() {
+    const list = document.getElementById('appointmentsList');
+    
+    if (appointments.length === 0) {
+        list.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No appointments scheduled yet</p>';
+        return;
+    }
+    
+    // Add Filter UI
+    list.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <!-- Search -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔍 Search</label>
+                    <input type="text" id="searchAppointments" placeholder="Search by email, purpose..." 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                        onkeyup="filterAppointments()">
+                </div>
+                
+                <!-- Status Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📊 Status</label>
+                    <select id="filterAptStatus" onchange="filterAppointments()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <option value="all">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <!-- Date Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📅 Date Range</label>
+                    <select id="filterAptDate" onchange="filterAppointments()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <option value="all">All Dates</option>
+                        <option value="today">Today</option>
+                        <option value="thisWeek">This Week</option>
+                        <option value="thisMonth">This Month</option>
+                        <option value="upcoming">Upcoming Only</option>
+                    </select>
+                </div>
+                
+                <!-- Sort -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔄 Sort By</label>
+                    <select id="sortAppointments" onchange="filterAppointments()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <option value="dateAsc">Date (Earliest First)</option>
+                        <option value="dateDesc">Date (Latest First)</option>
+                        <option value="newest">Recently Added</option>
+                    </select>
+                </div>
+                
+                <!-- Reset -->
+                <div style="display: flex; align-items: end;">
+                    <button onclick="resetAppointmentFilters()" 
+                        style="width: 100%; padding: 10px 15px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+            <div id="aptResultsCount" style="margin-top: 15px; color: #6b7280; font-size: 14px; font-weight: 600;"></div>
+        </div>
+        
+        <div id="appointmentsListFiltered"></div>
+    `;
+    
+    filterAppointments();
+}
+
+// Filter Appointments Function
+function filterAppointments() {
+    const searchTerm = document.getElementById('searchAppointments')?.value.toLowerCase() || '';
+    const statusFilter = document.getElementById('filterAptStatus')?.value || 'all';
+    const dateFilter = document.getElementById('filterAptDate')?.value || 'all';
+    const sortBy = document.getElementById('sortAppointments')?.value || 'dateAsc';
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    // Filter
+    let filtered = appointments.filter(apt => {
+        const matchesSearch = 
+            apt.email?.toLowerCase().includes(searchTerm) ||
+            apt.purpose?.toLowerCase().includes(searchTerm) ||
+            apt.notes?.toLowerCase().includes(searchTerm);
+        
+        const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
+        
+        let matchesDate = true;
+        const aptDate = new Date(apt.date);
+        if (dateFilter === 'today') matchesDate = aptDate.toDateString() === today.toDateString();
+        if (dateFilter === 'thisWeek') matchesDate = aptDate >= today && aptDate <= weekFromNow;
+        if (dateFilter === 'thisMonth') matchesDate = aptDate >= today && aptDate <= monthEnd;
+        if (dateFilter === 'upcoming') matchesDate = aptDate >= today;
+        
+        return matchesSearch && matchesStatus && matchesDate;
+    });
+    
+    // Sort
+    if (sortBy === 'dateAsc') {
+        filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (sortBy === 'dateDesc') {
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (sortBy === 'newest') {
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    
+    // Update count
+    const countElem = document.getElementById('aptResultsCount');
+    if (countElem) {
+        countElem.textContent = `Showing ${filtered.length} of ${appointments.length} appointments`;
+    }
+    
+    // Display
+    const container = document.getElementById('appointmentsListFiltered');
+    if (!container) return;
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No appointments match your filters</p>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(apt => {
+        let statusClass = 'pending';
+        if (apt.status === 'Confirmed') statusClass = 'approved';
+        if (apt.status === 'Cancelled' || apt.status === 'Canceled') statusClass = 'rejected';
+        
+        let certificateDetails = '';
+        if (apt.certificateData) {
+            certificateDetails = `
+                <div style="margin-top: 15px; padding: 15px; background: #f0f9ff; border-left: 4px solid #0891b2; border-radius: 8px;">
+                    <p style="font-weight: 700; color: #0891b2; margin-bottom: 10px;">📜 Certificate Request Details:</p>
+                    <p style="color: #333;"><strong>Full Name:</strong> ${apt.certificateData.fullName}</p>
+                    <p style="color: #333;"><strong>Certificate Type:</strong> ${apt.certificateData.certificateType}</p>
+                    <p style="color: #333;"><strong>Purpose:</strong> ${apt.certificateData.certificatePurpose}</p>
+                    ${apt.certificateData.age ? `<p style="color: #333;"><strong>Age:</strong> ${apt.certificateData.age}</p>` : ''}
+                    ${apt.certificateData.address ? `<p style="color: #333;"><strong>Address:</strong> ${apt.certificateData.address}</p>` : ''}
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="application-card">
+                <div class="app-header">
+                    <div style="flex: 1;">
+                        <div class="app-title">
+                            <h3>${apt.email}</h3>
+                            <span class="status-badge ${statusClass}">${apt.status}</span>
+                        </div>
+                        <p style="color: #6b7280; margin-top: 10px;"><strong>Date:</strong> ${new Date(apt.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${apt.time}</p>
+                        <p style="color: #6b7280;"><strong>Purpose:</strong> ${apt.purpose}</p>
+                        <p style="color: #6b7280;"><strong>Contact:</strong> ${apt.contact}</p>
+                        ${apt.notes ? `<p style="color: #6b7280;"><strong>Notes:</strong> ${apt.notes}</p>` : ''}
+                        <p style="color: #6b7280;"><strong>Appointment ID:</strong> ${apt._id}</p>
+                        ${certificateDetails}
+                    </div>
+                    
+                    ${apt.status === 'Pending' ? `
+                        <div class="app-actions">
+                            <button class="btn btn-approve" onclick="confirmAppointment('${apt._id}')">✓ Confirm</button>
+                            <button class="btn btn-reject" onclick="cancelAppointment('${apt._id}')">✗ Cancel</button>
+                        </div>
+                    ` : apt.status === 'Confirmed' ? `
+                        <div style="padding: 15px; background: #d1fae5; border-radius: 8px; text-align: center;">
+                            <p style="color: #065f46; font-weight: 600; margin: 0;">✓ Appointment Confirmed</p>
+                            <p style="color: #047857; font-size: 13px; margin-top: 5px;">Email notification sent</p>
+                        </div>
+                    ` : `
+                        <div style="padding: 15px; background: #fee2e2; border-radius: 8px; text-align: center;">
+                            <p style="color: #991b1b; font-weight: 600; margin: 0;">✗ Appointment Cancelled</p>
+                            <p style="color: #b91c1c; font-size: 13px; margin-top: 5px;">Email notification sent</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Reset Appointment Filters
+function resetAppointmentFilters() {
+    document.getElementById('searchAppointments').value = '';
+    document.getElementById('filterAptStatus').value = 'all';
+    document.getElementById('filterAptDate').value = 'all';
+    document.getElementById('sortAppointments').value = 'dateAsc';
+    filterAppointments();
+}
+
+       // ✅ UPDATED: Load Complaints with FILTER
+function loadComplaints() {
+    const list = document.getElementById('complaintsList');
+    
+    if (complaints.length === 0) {
+        list.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No complaints filed yet</p>';
+        return;
+    }
+    
+    // Add Filter UI
+    list.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <!-- Search -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔍 Search</label>
+                    <input type="text" id="searchComplaints" placeholder="Search complaints..." 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                        onkeyup="filterComplaints()">
+                </div>
+                
+                <!-- Status Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📊 Status</label>
+                    <select id="filterComplaintStatus" onchange="filterComplaints()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <option value="all">All Status</option>
+                        <option value="Pending">Open/Pending</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+                
+                <!-- Category Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Category</label>
+                    <select id="filterComplaintCategory" onchange="filterComplaints()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <option value="all">All Categories</option>
+                        <option value="Noise">Noise Complaint</option>
+                        <option value="Garbage">Garbage/Sanitation</option>
+                        <option value="Infrastructure">Infrastructure</option>
+                        <option value="Public Safety">Public Safety</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <!-- Sort -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔄 Sort By</label>
+                    <select id="sortComplaints" onchange="filterComplaints()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="priority">Priority (Open First)</option>
+                    </select>
+                </div>
+                
+                <!-- Reset -->
+                <div style="display: flex; align-items: end;">
+                    <button onclick="resetComplaintFilters()" 
+                        style="width: 100%; padding: 10px 15px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+            <div id="complaintResultsCount" style="margin-top: 15px; color: #6b7280; font-size: 14px; font-weight: 600;"></div>
+        </div>
+        
+        <div id="complaintsListFiltered"></div>
+    `;
+    
+    filterComplaints();
+}
+
+// Filter Complaints Function
+function filterComplaints() {
+    const searchTerm = document.getElementById('searchComplaints')?.value.toLowerCase() || '';
+    const statusFilter = document.getElementById('filterComplaintStatus')?.value || 'all';
+    const categoryFilter = document.getElementById('filterComplaintCategory')?.value || 'all';
+    const sortBy = document.getElementById('sortComplaints')?.value || 'newest';
+    
+    // Filter
+    let filtered = complaints.filter(complaint => {
+        const matchesSearch = 
+            complaint.email?.toLowerCase().includes(searchTerm) ||
+            complaint.subject?.toLowerCase().includes(searchTerm) ||
+            complaint.description?.toLowerCase().includes(searchTerm) ||
+            complaint.location?.toLowerCase().includes(searchTerm);
+        const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
+        const matchesCategory = categoryFilter === 'all' || complaint.category === categoryFilter;
+        
+        return matchesSearch && matchesStatus && matchesCategory;
+    });
+    
+    // Sort
+    if (sortBy === 'newest') {
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === 'oldest') {
+        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === 'priority') {
+        filtered.sort((a, b) => {
+            if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+            if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+    }
+    
+    // Update count
+    const countElem = document.getElementById('complaintResultsCount');
+    if (countElem) {
+        countElem.textContent = `Showing ${filtered.length} of ${complaints.length} complaints`;
+    }
+    
+    // Display
+    const container = document.getElementById('complaintsListFiltered');
+    if (!container) return;
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No complaints match your filters</p>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(complaint => `
+        <div class="application-card">
+            <div class="app-header">
+                <div style="flex: 1;">
+                    <div class="app-title">
+                        <h3>${complaint.email}</h3>
+                        <span class="status-badge ${complaint.status === 'Resolved' ? 'resolved' : 'open'}">${complaint.status}</span>
+                    </div>
+                    <p style="color: #6b7280; margin-top: 10px;"><strong>Category:</strong> ${complaint.category}</p>
+                    <p style="color: #6b7280;"><strong>Subject:</strong> ${complaint.subject}</p>
+                    <p style="color: #6b7280;"><strong>Location:</strong> ${complaint.location}</p>
+                    <p style="color: #6b7280;"><strong>Description:</strong> ${complaint.description}</p>
+                    <p style="color: #6b7280;"><strong>Contact:</strong> ${complaint.contact}</p>
+                    <p style="color: #6b7280;"><strong>Date:</strong> ${new Date(complaint.createdAt).toLocaleDateString()}</p>
+                    ${complaint.response ? `<p style="color: #10b981; margin-top: 10px;"><strong>Response:</strong> ${complaint.response}</p>` : ''}
+                </div>
+                ${complaint.status === 'Pending' ? `
+                    <div class="app-actions">
+                        <button class="btn btn-download" onclick="respondToComplaint('${complaint._id}')">Respond</button>
+                        <button class="btn btn-approve" onclick="resolveComplaint('${complaint._id}')">Mark Resolved</button>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Reset Complaint Filters
+function resetComplaintFilters() {
+    document.getElementById('searchComplaints').value = '';
+    document.getElementById('filterComplaintStatus').value = 'all';
+    document.getElementById('filterComplaintCategory').value = 'all';
+    document.getElementById('sortComplaints').value = 'newest';
+    filterComplaints();
+}
+
+        // Approve Application
+        async function approveApplication(id) {
+            if (!confirm('Are you sure you want to approve this application?')) return;
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const res = await fetch(`${apiUrl}/admin/approve`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ id, status: 'Approved' })
+                });
+                
+                if (res.ok) {
+                    alert('Application approved successfully!');
+                    await fetchDashboardData();
+                    loadApplications();
+                } else {
+                    alert('Failed to approve application');
+                }
+            } catch (err) {
+                console.error('Error approving application:', err);
+                alert('Error approving application');
+            }
+        }
+
+        // Reject Application
+        async function rejectApplication(id) {
+            if (!confirm('Are you sure you want to reject this application?')) return;
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const res = await fetch(`${apiUrl}/admin/approve`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ id, status: 'Rejected' })
+                });
+                
+                if (res.ok) {
+                    alert('Application rejected');
+                    await fetchDashboardData();
+                    loadApplications();
+                } else {
+                    alert('Failed to reject application');
+                }
+            } catch (err) {
+                console.error('Error rejecting application:', err);
+                alert('Error rejecting application');
+            }
+        }
+
+        // Confirm Appointment
+async function confirmAppointment(id) {
+    if (!confirm('Confirm this appointment?')) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const res = await fetch(`${apiUrl}/admin/appointment/update`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ id, status: 'Confirmed' })
+        });
+        
+        if (res.ok) {
+            alert('Appointment confirmed!\n\nThe resident will be notified via email.');
+            await fetchDashboardData();
+            loadAppointments();
+        } else {
+            const error = await res.json();
+            alert('Failed to confirm appointment: ' + error.message);
+        }
+    } catch (err) {
+        console.error('Error confirming appointment:', err);
+        alert('Error confirming appointment');
+    }
+}
+
+// Cancel Appointment
+async function cancelAppointment(id) {
+    if (!confirm('Are you sure you want to cancel this appointment?')) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const res = await fetch(`${apiUrl}/admin/appointment/update`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ id, status: 'Cancelled' })
+        });
+        
+        if (res.ok) {
+            alert('Appointment cancelled.\n\nThe resident will be notified via email.');
+            await fetchDashboardData();
+            loadAppointments();
+        } else {
+            const error = await res.json();
+            alert('Failed to cancel appointment: ' + error.message);
+        }
+    } catch (err) {
+        console.error('Error cancelling appointment:', err);
+        alert('Error cancelling appointment');
+    }
+}
+
+        // Respond to Complaint
+        async function respondToComplaint(id) {
+            const response = prompt('Enter your response to this complaint:');
+            
+            if (!response || response.trim() === '') {
+                alert('Response cannot be empty');
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const res = await fetch(`${apiUrl}/complaint/response`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ id, response: response.trim() })
+                });
+                
+                if (res.ok) {
+                    alert('Response sent successfully!');
+                    await fetchDashboardData();
+                    loadComplaints();
+                } else {
+                    alert('Failed to send response');
+                }
+            } catch (err) {
+                console.error('Error sending response:', err);
+                alert('Error sending response');
+            }
+        }
+
+        // Resolve Complaint
+        async function resolveComplaint(id) {
+            const response = prompt('Enter resolution details before marking as resolved:');
+            
+            if (!response || response.trim() === '') {
+                alert('Please provide resolution details');
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const res = await fetch(`${apiUrl}/complaint/response`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ id, response: response.trim() })
+                });
+                
+                if (res.ok) {
+                    alert('Complaint marked as resolved!');
+                    await fetchDashboardData();
+                    loadComplaints();
+                } else {
+                    alert('Failed to resolve complaint');
+                }
+            } catch (err) {
+                console.error('Error resolving complaint:', err);
+                alert('Error resolving complaint');
+            }
+        }
+
+        // Show Notifications
+        function showNotifications() {
+            const pendingCount = applications.filter(a => a.status === 'Pending').length;
+            const openComplaintsCount = complaints.filter(c => c.status === 'Pending').length;
+            
+            alert(`Notifications:\n\n📄 Pending Applications: ${pendingCount}\n📝 Open Complaints: ${openComplaintsCount}\n📅 Upcoming Appointments: ${appointments.length}`);
+        }
+
+        // Export Data
+        function exportData(type) {
+            alert(`Export ${type} feature coming soon!\n\nThis will allow you to download data in CSV or PDF format.`);
+        }
+
+        // Load Residents
+function loadResidents() {
+    const list = document.getElementById('residentsList');
+    
+    if (residents.length === 0) {
+        list.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">No residents registered yet</p>';
+        return;
+    }
+    
+    list.innerHTML = `
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Category</th>
+                        <th>Registration Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${residents.map(resident => `
+                        <tr>
+                            <td>${resident.email}</td>
+                            <td><span class="status-badge approved">${resident.category || 'Resident'}</span></td>
+                            <td>${resident.createdAt ? new Date(resident.createdAt).toLocaleDateString() : 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-download" style="padding: 8px 16px; font-size: 14px;" onclick="viewResident('${resident._id}')">View Details</button>
+                                <button class="btn btn-reject" style="padding: 8px 16px; font-size: 14px;" onclick="deleteResident('${resident._id}', '${resident.email}')">Remove</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+// Load Payments
+function loadPayments() {
+    const list = document.getElementById('paymentsList');
+    
+    // Get all applications with GCash payments
+    const paidApplications = applications.filter(app => app.gcashReference);
+    
+    if (paidApplications.length === 0) {
+        list.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">💳</div>
+                <h3 style="color: #6b7280; margin-bottom: 10px;">No Payment Transactions Yet</h3>
+                <p style="color: #9ca3af;">Payment records will appear here once residents submit applications with GCash payments.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Calculate statistics
+    const totalRevenue = paidApplications.reduce((sum, app) => sum + (parseFloat(app.paymentAmount) || 100), 0);
+    const verifiedPayments = paidApplications.filter(app => app.paymentStatus === 'Verified').length;
+    const pendingPayments = paidApplications.filter(app => app.paymentStatus === 'Pending').length;
+    
+    list.innerHTML = `
+        <!-- Payment Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                <div style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">₱${totalRevenue.toLocaleString()}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Revenue</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                <div style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">${verifiedPayments}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Verified Payments</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                <div style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">${pendingPayments}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Pending Verification</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);">
+                <div style="font-size: 32px; font-weight: 700; margin-bottom: 5px;">${paidApplications.length}</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Transactions</div>
+            </div>
+        </div>
+        
+        <!-- Payment List -->
+        <h3 style="margin-bottom: 20px; color: #1f2937; font-size: 20px;">Payment Records</h3>
+        ${paidApplications.map(payment => {
+            const statusColor = {
+                'Verified': '#10b981',
+                'Pending': '#f59e0b',
+                'Rejected': '#ef4444'
+            }[payment.paymentStatus] || '#6b7280';
+            
+            return `
+                <div class="application-card" style="border-left: 4px solid ${statusColor};">
+                    <div class="app-header">
+                        <div style="flex: 1;">
+                            <div class="app-title">
+                                <h3>${payment.firstName} ${payment.lastName}</h3>
+                                <span class="status-badge ${payment.paymentStatus?.toLowerCase() || 'pending'}">${payment.paymentStatus || 'Pending'}</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                                <div>
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 3px;">Document Type</p>
+                                    <p style="color: #1f2937; font-weight: 600;">${payment.type}</p>
+                                </div>
+                                <div>
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 3px;">Amount Paid</p>
+                                    <p style="color: #10b981; font-weight: 700; font-size: 18px;">₱${(payment.paymentAmount || 100).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 3px;">GCash Reference</p>
+                                    <p style="color: #1f2937; font-weight: 600; font-family: monospace;">${payment.gcashReference}</p>
+                                </div>
+                                <div>
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 3px;">Date</p>
+                                    <p style="color: #1f2937; font-weight: 600;">${new Date(payment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                </div>
+                                <div>
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 3px;">Contact</p>
+                                    <p style="color: #1f2937; font-weight: 600;">${payment.email}</p>
+                                </div>
+                                <div>
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 3px;">Transaction ID</p>
+                                    <p style="color: #6b7280; font-size: 12px; font-family: monospace;">${payment._id}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ${payment.paymentStatus === 'Pending' ? `
+                            <div class="app-actions" style="margin-left: 20px;">
+                                <button class="btn btn-approve" onclick="verifyPayment('${payment._id}', 'Verified')" style="white-space: nowrap;">
+                                    ✓ Verify Payment
+                                </button>
+                                <button class="btn btn-reject" onclick="verifyPayment('${payment._id}', 'Rejected')" style="white-space: nowrap;">
+                                    ✗ Reject Payment
+                                </button>
+                            </div>
+                        ` : payment.paymentStatus === 'Verified' ? `
+                            <div style="padding: 15px; background: #d1fae5; border-radius: 10px; text-align: center; margin-left: 20px;">
+                                <div style="font-size: 32px; margin-bottom: 5px;">✓</div>
+                                <p style="color: #065f46; font-weight: 600; margin: 0;">Payment Verified</p>
+                            </div>
+                        ` : `
+                            <div style="padding: 15px; background: #fee2e2; border-radius: 10px; text-align: center; margin-left: 20px;">
+                                <div style="font-size: 32px; margin-bottom: 5px;">✗</div>
+                                <p style="color: #991b1b; font-weight: 600; margin: 0;">Payment Rejected</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join('')}
+    `;
+}
+
+// View Resident Details
+function viewResident(id) {
+    const resident = residents.find(r => r._id === id);
+    if (!resident) return;
+    
+    alert(`Resident Details:\n\nEmail: ${resident.email}\nCategory: ${resident.category || 'Resident'}\nRegistered: ${resident.createdAt ? new Date(resident.createdAt).toLocaleDateString() : 'N/A'}\n\nInfo: ${resident.info || 'No additional information'}`);
+}
+
+// Delete Resident
+async function deleteResident(id, email) {
+    if (!confirm(`Are you sure you want to remove ${email} from the system?\n\nThis action cannot be undone.`)) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const res = await fetch(`${apiUrl}/admin/resident/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (res.ok) {
+            alert('Resident removed successfully');
+            await fetchDashboardData();
+            loadResidents();
+        } else {
+            alert('Failed to remove resident');
+        }
+    } catch (err) {
+        console.error('Error removing resident:', err);
+        alert('Error removing resident');
+    }
+}
+
+// Verify Payment
+async function verifyPayment(id, status) {
+    const confirmMsg = status === 'Verified' 
+        ? 'Verify this payment?' 
+        : 'Reject this payment?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const res = await fetch(`${apiUrl}/admin/payment/verify`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ id, status })
+        });
+        
+        if (res.ok) {
+            alert(`Payment ${status.toLowerCase()} successfully!`);
+            await fetchDashboardData();
+            loadPayments();
+        } else {
+            alert('Failed to update payment');
+        }
+    } catch (err) {
+        console.error('Error updating payment:', err);
+        alert('Error updating payment');
+    }
+}
+// 🆕 VERIFY GCASH PAYMENT
+async function verifyPayment(appId, status) {
+    const confirmMsg = status === 'Verified' 
+        ? 'Verify that this GCash payment is legitimate?' 
+        : 'Reject this payment?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const res = await fetch(`${apiUrl}/admin/application/verify-payment`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                applicationId: appId, 
+                paymentStatus: status 
+            })
+        });
+        
+        if (res.ok) {
+            alert(`Payment ${status.toLowerCase()} successfully!`);
+            await fetchDashboardData();
+            loadApplications();
+        } else {
+            const error = await res.json();
+            alert('Failed to update payment: ' + error.message);
+        }
+    } catch (err) {
+        console.error('Error updating payment:', err);
+        alert('Error updating payment status');
+    }
+}
+
+        // Update Stats
+        function updateStats() {
+    document.getElementById('totalApps').textContent = applications.length;
+    document.getElementById('pendingApps').textContent = applications.filter(a => a.status === 'Pending').length;
+    document.getElementById('approvedApps').textContent = applications.filter(a => a.status === 'Approved').length;
+    document.getElementById('totalResidents').textContent = residents.length;
+    // 🆕 Pending payments count
+    const pendingPayments = applications.filter(a => a.paymentStatus === 'Pending').length;
+    document.getElementById('pendingPayments').textContent = pendingPayments;
+}
+
+// 🆕 NOTIFICATION SYSTEM
+let notifications = [];
+
+// Toggle Notification Dropdown
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    dropdown.classList.toggle('hidden');
+    
+    if (!dropdown.classList.contains('hidden')) {
+        loadNotifications();
+    }
+}
+
+// Load Notifications
+function loadNotifications() {
+    const list = document.getElementById('notificationList');
+    
+    // Generate notifications from data
+    notifications = [];
+    
+    // Pending Applications
+    applications.filter(a => a.status === 'Pending').forEach(app => {
+        notifications.push({
+            id: app._id,
+            type: 'application',
+            title: 'New Application',
+            message: `${app.firstName} ${app.lastName} submitted a ${app.type} application`,
+            time: app.createdAt,
+            section: 'applications',
+            read: false
+        });
+    });
+    
+    // Pending Appointments
+    appointments.filter(a => a.status === 'Pending').forEach(apt => {
+        notifications.push({
+            id: apt._id,
+            type: 'appointment',
+            title: 'New Appointment Request',
+            message: `${apt.email} scheduled an appointment for ${new Date(apt.date).toLocaleDateString()}`,
+            time: apt.createdAt,
+            section: 'appointments',
+            read: false
+        });
+    });
+    
+    // Open Complaints
+    complaints.filter(c => c.status === 'Pending').forEach(complaint => {
+        notifications.push({
+            id: complaint._id,
+            type: 'complaint',
+            title: 'New Complaint',
+            message: `${complaint.email} filed a complaint: ${complaint.subject}`,
+            time: complaint.createdAt,
+            section: 'complaints',
+            read: false
+        });
+    });
+    
+    // Pending Payments
+    const pendingPaymentApps = applications.filter(a => a.paymentStatus === 'Pending' && a.gcashReference);
+    pendingPaymentApps.forEach(app => {
+        notifications.push({
+            id: app._id,
+            type: 'payment',
+            title: 'Payment Verification Needed',
+            message: `${app.firstName} ${app.lastName} submitted GCash payment: ${app.gcashReference}`,
+            time: app.createdAt,
+            section: 'applications',
+            read: false
+        });
+    });
+    
+    // Sort by most recent
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    // Update badge count
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notificationBadge');
+    
+    if (unreadCount > 0) {
+        badge.classList.add('active');
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+    } else {
+        badge.classList.remove('active');
+    }
+    
+    // Render notifications
+    if (notifications.length === 0) {
+        list.innerHTML = '<p style="text-align: center; padding: 30px; color: #6b7280;">No notifications</p>';
+        return;
+    }
+    
+    list.innerHTML = notifications.map(notif => {
+        const icon = {
+            appointment: '📅',
+            application: '📄',
+            complaint: '📝',
+            payment: '💳'
+        }[notif.type] || '🔔';
+        
+        const timeAgo = getTimeAgo(new Date(notif.time));
+        
+        return `
+            <div class="notification-item ${notif.read ? '' : 'unread'}" onclick="handleNotificationClick('${notif.id}', '${notif.section}')">
+                <div class="notification-icon ${notif.type}">
+                    ${icon}
+                </div>
+                <div class="notification-content">
+                    <h4>${notif.title}</h4>
+                    <p>${notif.message}</p>
+                    <span class="notification-time">${timeAgo}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Handle Notification Click
+function handleNotificationClick(id, section) {
+    // Mark as read
+    notifications = notifications.map(n => {
+        if (n.id === id) n.read = true;
+        return n;
+    });
+    
+    // Close dropdown
+    document.getElementById('notificationDropdown').classList.add('hidden');
+    
+    // Navigate to section
+    showSection(section);
+    
+    // Update badge
+    loadNotifications();
+}
+
+// Get Time Ago
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + ' years ago';
+    
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + ' months ago';
+    
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + ' days ago';
+    
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + ' hours ago';
+    
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + ' minutes ago';
+    
+    return 'Just now';
+}
+
+// Mark All as Read
+function markAllAsRead() {
+    notifications = notifications.map(n => {
+        n.read = true;
+        return n;
+    });
+    loadNotifications();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('notificationDropdown');
+    const button = document.querySelector('.notification-btn');
+    
+    if (!dropdown?.contains(event.target) && !button?.contains(event.target)) {
+        dropdown?.classList.add('hidden');
+    }
+});
+
+        // Logout
+        async function logout() {
+            if (!confirm('Are you sure you want to logout?')) return;
+            
+            try {
+                await fetch(`${apiUrl}/logout`, { 
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+            } catch (err) {
+                console.log('Logout error:', err);
+            }
+            
+            localStorage.clear();
+            window.location.href = 'admin.html';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAdminAuth();
+            fetchDashboardData();
+        });
+
+        // Auto-refresh data every 30 seconds
+        setInterval(() => {
+            fetchDashboardData();
+        }, 30000);
+    </script>
+</body>
+</html>

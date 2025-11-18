@@ -1,0 +1,24 @@
+{
+  "name": "pembo-system",
+  "version": "1.0.0",
+  "description": "Pembo Barangay System with secure authentication",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-mongodb-session": "^5.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^7.0.0",
+    "multer": "^2.0.2",
+    "nodemailer": "^6.9.1",
+    "pdfkit": "^0.17.2",
+    "qrcode": "^1.5.4"
+  }
+}
