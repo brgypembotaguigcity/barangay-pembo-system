@@ -1,4 +1,4 @@
-const apiUrl = 'http://localhost:3000';
+const apiUrl = 'https://barangay-pembo-system.onrender.com';
 
 
 // ==================== PASSWORD FUNCTIONS ====================

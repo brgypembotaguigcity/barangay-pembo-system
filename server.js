@@ -14,16 +14,18 @@ const app = express();
 
 
 // MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/pembo-system', {
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pembo-system';
+
+mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  .then(() => console.log('✅ MongoDB connected to:', mongoURI.includes('mongodb.net') ? 'Cloud Database' : 'Local Database'))
+  .catch(err => console.log('❌ MongoDB connection error:', err));
 
 // Session Store
 const store = new MongoDBStore({
-  uri: 'mongodb://localhost:27017/pembo-system',
+  uri: mongoURI,
   collection: 'sessions'
 });
 store.on('error', function(error) { console.log(error); });
