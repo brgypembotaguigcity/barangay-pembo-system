@@ -12,6 +12,7 @@ require('dotenv').config();
 
 const app = express();
 
+
 // MongoDB Connection
 mongoose.connect('mongodb://localhost:27017/pembo-system', {
   useNewUrlParser: true,
@@ -102,7 +103,9 @@ const applicationSchema = new mongoose.Schema({
   gcashReference: String,
   paymentAmount: Number,
   paymentStatus: { type: String, default: 'Pending' },
-  deliveryMethod: { type: String, enum: ['pickup', 'deliver'], default: 'pickup' }, // 🆕 DAGDAG
+  deliveryMethod: { type: String, enum: ['pickup', 'deliver'], default: 'pickup' },
+  deliveryStatus: { type: String, default: null },
+  deliveryStatusDate: { type: Date, default: null },  // 🆕
   status: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now }
 });
@@ -188,44 +191,69 @@ const isAdmin = (req, res, next) => {
 
 app.post('/signup', async (req, res) => {
   try {
-    const { email, password, category } = req.body;
+    const { email, password, category, adminCode } = req.body;
+    
+    console.log('📝 Signup attempt:', { email, category, adminCode }); // Debug log
     
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'Email already registered' });
+    
+    // ✅ FIXED: CHECK ADMIN CODE FIRST (case-insensitive)
+    let role = 'resident';
+    
+    if (category && category.trim().toLowerCase() === 'admin') {
+      const correctAdminCode = process.env.ADMIN_SECRET_CODE || 'PEMBO2024ADMIN';
+      
+      console.log('🔑 Admin signup detected');
+      console.log('Expected code:', correctAdminCode);
+      console.log('Received code:', adminCode);
+      
+      if (!adminCode) {
+        return res.status(400).json({ message: 'Admin verification code is required' });
+      }
+      
+      if (adminCode.trim() !== correctAdminCode.trim()) {
+        console.log('❌ Admin code mismatch!');
+        return res.status(403).json({ message: 'Invalid admin verification code. Please contact barangay office.' });
+      }
+      
+      role = 'admin';
+      console.log('✅ Admin code verified, role set to admin');
+    }
     
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     
-    let role = 'resident';
-    if (category && category.toLowerCase() === 'admin') {
-      role = 'admin';
-    }
-    
     const user = new User({ 
       email, 
       password: hashedPassword, 
       category, 
-      role: role,
+      role: role,  // ✅ Use the role we determined above
       otp, 
       otpExpires 
     });
+    
     await user.save();
+    
+    console.log('✅ User created with role:', role);
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify Your Pembo System Account',
-      text: `Your OTP is ${otp}. It expires in 10 minutes.`
+      subject: role === 'admin' ? 'Admin Account Verification - Barangay Pembo' : 'Verify Your Pembo System Account',
+      text: `Your OTP is ${otp}. It expires in 10 minutes.${role === 'admin' ? '\n\nThis is an ADMIN account registration.' : ''}`
     });
 
-    res.status(201).json({ message: 'Signup successful, please verify OTP' });
+    res.status(201).json({ 
+      message: 'Signup successful, please verify OTP',
+      isAdmin: role === 'admin'
+    });
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).json({ message: 'Server error: ' + err.message });
   }
 });
-
 app.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -581,38 +609,50 @@ app.put('/admin/approve', authenticateToken, isAdmin, async (req, res) => {
           : `Your ${application.type} is ready for pickup at the Barangay Hall. You may claim it after 24 hours during office hours (8:00 AM - 5:00 PM, Monday to Friday).`;
         
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: application.email,
-          subject: `Application Approved - ${application.type}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #10b981;">✅ Your Application Has Been Approved</h2>
-              <p>Dear ${application.firstName} ${application.lastName},</p>
-              <p>We are pleased to inform you that your application for <strong>${application.type}</strong> has been approved.</p>
-              
-              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #0891b2; margin-top: 0;">📋 Application Details:</h3>
-                <p><strong>Document Type:</strong> ${application.type}</p>
-                <p><strong>Application ID:</strong> ${application._id}</p>
-                <p><strong>Delivery Method:</strong> ${application.deliveryMethod === 'deliver' ? 'Home Delivery' : 'Pickup at Barangay Hall'}</p>
-              </div>
-              
-              <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #92400e; margin-top: 0;">📌 Important Notice:</h3>
-                <p>${deliveryMessage}</p>
-              </div>
-              
-              <p>If you have any questions, please contact the Barangay Hall during office hours.</p>
-              
-              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-              <p style="color: #6b7280; font-size: 14px;">
-                <strong>Barangay Pembo</strong><br>
-                Office Hours: Monday - Friday, 8:00 AM - 5:00 PM<br>
-                Contact: brgy.pembo.taguigcity@gmail.com
-              </p>
-            </div>
-          `
-        });
+  from: process.env.EMAIL_USER,
+  to: application.email,
+  subject: `Application Approved - ${application.type}`,
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #10b981;">✅ Your Application Has Been Approved</h2>
+      <p>Dear ${application.firstName} ${application.lastName},</p>
+      <p>We are pleased to inform you that your application for <strong>${application.type}</strong> has been approved.</p>
+      
+      <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #0891b2; margin-top: 0;">📋 Application Details:</h3>
+        <p><strong>Document Type:</strong> ${application.type}</p>
+        <p><strong>Application ID:</strong> ${application._id}</p>
+        <p><strong>Delivery Method:</strong> ${application.deliveryMethod === 'deliver' ? 'Home Delivery' : 'Pickup at Barangay Hall'}</p>
+      </div>
+      
+      <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #92400e; margin-top: 0;">📌 Important Notice:</h3>
+        <p>${deliveryMessage}</p>
+      </div>
+      
+      <div style="background: #e0e7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #3730a3; margin-top: 0;">📬 IMPORTANT: Confirm Receipt</h3>
+        <p style="color: #4338ca; font-weight: 600;">Once you receive your ${application.type}, please log in to the resident portal and click the "RECEIVED" or "DID NOT RECEIVE" button in your applications page.</p>
+        <p style="color: #4338ca; margin-top: 10px;">
+          • Click "✅ Received" if you got your document<br>
+          • Click "❌ Did Not Receive" if you haven't received it after 24+ hours
+        </p>
+        <p style="color: #4338ca; margin-top: 10px; font-style: italic;">
+          This helps us improve our service and track document delivery.
+        </p>
+      </div>
+      
+      <p>If you have any questions, please contact the Barangay Hall during office hours.</p>
+      
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+      <p style="color: #6b7280; font-size: 14px;">
+        <strong>Barangay Pembo</strong><br>
+        Office Hours: Monday - Friday, 8:00 AM - 5:00 PM<br>
+        Contact: brgy.pembo.taguigcity@gmail.com
+      </p>
+    </div>
+  `
+});
         
         console.log('✅ Approval email sent successfully');
       } 
@@ -1156,4 +1196,93 @@ app.put('/admin/application/verify-payment', authenticateToken, isAdmin, async (
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// 🆕 UPDATE DELIVERY STATUS FROM RESIDENT
+app.put('/application/delivery-status', authenticateToken, async (req, res) => {
+  try {
+    const { applicationId, deliveryStatus } = req.body;
+    
+    const application = await Application.findByIdAndUpdate(
+      applicationId,
+      { 
+        deliveryStatus,
+        deliveryStatusDate: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    
+    // 🆕 SEND EMAIL TO ADMIN
+try {
+    const adminUsers = await User.find({ role: 'admin' });
+    const adminEmails = adminUsers.map(admin => admin.email).join(', ');
+    
+    if (adminEmails) {
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: adminEmails,
+            subject: `📬 Document Delivery Update - ${application.type}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: white; border-radius: 15px;">
+                    <div style="background: ${deliveryStatus === 'Received' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'}; padding: 30px; border-radius: 15px 15px 0 0; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">
+                            ${deliveryStatus === 'Received' ? '✅ Document Received' : '⚠️ Document Not Received'}
+                        </h1>
+                    </div>
+                    
+                    <div style="padding: 30px; background: #f9fafb; border-radius: 0 0 15px 15px;">
+                        <h2 style="color: #1f2937; margin-top: 0;">Delivery Status Update</h2>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <p style="margin: 8px 0; color: #374151;"><strong>Resident:</strong> ${application.firstName} ${application.lastName}</p>
+                            <p style="margin: 8px 0; color: #374151;"><strong>Email:</strong> ${application.email}</p>
+                            <p style="margin: 8px 0; color: #374151;"><strong>Contact:</strong> ${application.contact}</p>
+                            <p style="margin: 8px 0; color: #374151;"><strong>Document Type:</strong> ${application.type}</p>
+                            <p style="margin: 8px 0; color: #374151;"><strong>Delivery Method:</strong> ${application.deliveryMethod === 'deliver' ? 'Home Delivery' : 'Pickup at Barangay Hall'}</p>
+                            <p style="margin: 8px 0; color: #374151;"><strong>Status:</strong> <span style="color: ${deliveryStatus === 'Received' ? '#10b981' : '#ef4444'}; font-weight: bold;">${deliveryStatus}</span></p>
+                            <p style="margin: 8px 0; color: #6b7280;"><strong>Date Reported:</strong> ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                        </div>
+                        
+                        ${deliveryStatus === 'Not Received' ? `
+                            <div style="background: #fee2e2; padding: 20px; border-left: 4px solid #dc2626; border-radius: 8px; margin-top: 20px;">
+                                <p style="color: #991b1b; font-weight: 600; margin: 0 0 10px 0;">⚠️ Action Required</p>
+                                <p style="color: #7f1d1d; margin: 0;">The resident has reported that they have NOT received their ${application.type} document. Please investigate and follow up on this delivery immediately.</p>
+                            </div>
+                        ` : `
+                            <div style="background: #d1fae5; padding: 20px; border-left: 4px solid #10b981; border-radius: 8px; margin-top: 20px;">
+                                <p style="color: #065f46; font-weight: 600; margin: 0 0 10px 0;">✅ Delivery Confirmed</p>
+                                <p style="color: #047857; margin: 0;">The resident has confirmed receipt of their ${application.type}. This transaction is now complete.</p>
+                            </div>
+                        `}
+                        
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center;">
+                            <p style="color: #6b7280; font-size: 14px; margin: 5px 0;">
+                                <strong>Barangay Pembo Management System</strong>
+                            </p>
+                            <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">
+                                This is an automated notification. Please do not reply to this email.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+        console.log(`✅ Admin notification sent to: ${adminEmails}`);
+    }
+} catch (emailError) {
+    console.error('❌ Email error:', emailError);
+}
+    
+    res.json({ message: 'Delivery status updated', application });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
+});

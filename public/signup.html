@@ -383,13 +383,21 @@
                     </div>
                     <p id="passwordStrength" class="strength"></p>
                     <div class="input-group">
-                        <label for="category">Select Category:</label>
+                        <label for="category">I am a:</label>
                         <select id="category" required>
-                            <option value="" disabled selected>Choose your category</option>
-                            <option value="resident">Resident</option>
-                            <option value="admin">Admin</option>
+                            <option value="">Select Category</option>
+                            <option value="Resident">Resident</option>
+                            <option value="Admin">Admin</option>
                         </select>
                     </div>
+                 <!-- 🆕 ADMIN VERIFICATION CODE (Hidden by default) -->
+                  <div class="input-group" id="adminCodeGroup" style="display: none;">
+             <label for="adminCode">🔐 Admin Verification Code:</label>
+              <input type="password" id="adminCode" placeholder="Enter admin verification code">
+                  <small style="color: #f59e0b; font-size: 12px; margin-top: 5px; display: block;">
+                     ⚠️ This code is only available to authorized barangay officials. Unauthorized access is prohibited.
+           </small>
+                  </div>
                     
                     <!-- Terms and Conditions -->
                     <div class="input-group" style="text-align: left;">
@@ -420,304 +428,252 @@
         </div>
     </div>
 
-    <script>
-        const apiUrl = 'http://localhost:3000';
+   <script>
+        // ✅ WAIT FOR DOM TO LOAD
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Signup page loaded');
 
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            const icon = input.nextElementSibling;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                icon.textContent = '👁️';
-            }
-        }
+            const apiUrl = 'http://localhost:3000';
 
-        function checkPasswordStrength(password) {
-            const strength = document.getElementById('passwordStrength');
-            if (!strength) return;
-            
-            let score = 0;
-            if (password.length >= 8) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[a-z]/.test(password)) score++;
-            if (/\d/.test(password)) score++;
-            if (/[@$!%*?&]/.test(password)) score++;
-            
-            if (password.length === 0) {
-                strength.textContent = '';
-                strength.className = 'strength';
-            } else if (score < 3) {
-                strength.textContent = 'Weak Password - Add more characters';
-                strength.className = 'strength weak';
-            } else if (score < 5) {
-                strength.textContent = 'Medium Password - Almost there!';
-                strength.className = 'strength medium';
-            } else {
-                strength.textContent = 'Strong Password - Perfect!';
-                strength.className = 'strength strong';
-            }
-        }
-
-        // Password strength monitoring
-        document.getElementById('password').addEventListener('input', (e) => {
-            checkPasswordStrength(e.target.value);
-        });
-
-        // Sign Up Form
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const category = document.getElementById('category').value;
-            const messageElem = document.getElementById('message');
-            
-            messageElem.textContent = '';
-            messageElem.classList.remove('success', 'error');
-
-            // Validate password strength
-            let score = 0;
-            if (password.length >= 8) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[a-z]/.test(password)) score++;
-            if (/\d/.test(password)) score++;
-            if (/[@$!%*?&]/.test(password)) score++;
-
-            if (score < 3) {
-                messageElem.textContent = 'Password is too weak. Please use a stronger password.';
-                messageElem.classList.add('error');
-                return;
-            }
-
-            messageElem.textContent = 'Creating account...';
-            messageElem.classList.add('success');
-
-            try {
-                const res = await fetch(`${apiUrl}/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, category })
-                });
-                const data = await res.json();
+            function togglePassword(id) {
+                const input = document.getElementById(id);
+                const icon = input.nextElementSibling;
                 
-                console.log('Signup response:', data); // Debug
-                
-                messageElem.textContent = data.message;
-                
-                if (res.status === 201) {
-                    document.getElementById('signupForm').style.display = 'none';
-                    document.getElementById('otpSection').style.display = 'block';
-                    messageElem.classList.add('success');
-                    messageElem.classList.remove('error');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.textContent = '🙈';
                 } else {
-                    messageElem.classList.add('error');
-                    messageElem.classList.remove('success');
+                    input.type = 'password';
+                    icon.textContent = '👁️';
                 }
-            } catch (err) {
-                console.error('Signup error:', err);
-                messageElem.textContent = 'Error during sign-up. Make sure the server is running.';
-                messageElem.classList.add('error');
-                messageElem.classList.remove('success');
             }
-        });
+            window.togglePassword = togglePassword;
 
-        async function verifyOTP() {
-            const email = document.getElementById('email').value;
-            const otp = document.getElementById('otp').value;
-            const messageElem = document.getElementById('message');
-            
-            messageElem.textContent = '';
-            messageElem.classList.remove('success', 'error');
-
-            if (otp.length !== 6) {
-                messageElem.textContent = 'Please enter a valid 6-digit OTP';
-                messageElem.classList.add('error');
-                return;
+            function checkPasswordStrength(password) {
+                const strength = document.getElementById('passwordStrength');
+                if (!strength) return;
+                
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[a-z]/.test(password)) score++;
+                if (/\d/.test(password)) score++;
+                if (/[@$!%*?&]/.test(password)) score++;
+                
+                if (password.length === 0) {
+                    strength.textContent = '';
+                    strength.className = 'strength';
+                } else if (score < 3) {
+                    strength.textContent = 'Weak Password - Add more characters';
+                    strength.className = 'strength weak';
+                } else if (score < 5) {
+                    strength.textContent = 'Medium Password - Almost there!';
+                    strength.className = 'strength medium';
+                } else {
+                    strength.textContent = 'Strong Password - Perfect!';
+                    strength.className = 'strength strong';
+                }
             }
 
-            messageElem.textContent = 'Verifying OTP...';
-            messageElem.classList.add('success');
+            // Password strength monitoring
+            document.getElementById('password').addEventListener('input', (e) => {
+                checkPasswordStrength(e.target.value);
+            });
 
-            try {
-                const res = await fetch(`${apiUrl}/verify-otp`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp })
-                });
-                const data = await res.json();
-                
-                console.log('OTP verification response:', data); // Debug
-                
-                messageElem.textContent = data.message;
-                
-                if (res.status === 200) {
-                    messageElem.classList.add('success');
-                    messageElem.classList.remove('error');
+            // 🆕 Show/Hide Admin Code Field
+            const categorySelect = document.getElementById('category');
+            const adminCodeGroup = document.getElementById('adminCodeGroup');
+            const adminCodeInput = document.getElementById('adminCode');
+
+            console.log('Category select:', categorySelect);
+            console.log('Admin code group:', adminCodeGroup);
+
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    console.log('Category changed to:', this.value);
                     
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 2000);
-                } else {
-                    messageElem.classList.add('error');
-                    messageElem.classList.remove('success');
-                }
-            } catch (err) {
-                console.error('OTP verification error:', err);
-                messageElem.textContent = 'Error verifying OTP. Please try again.';
-                messageElem.classList.add('error');
-                messageElem.classList.remove('success');
+                    if (this.value === 'Admin') {
+                        adminCodeGroup.style.display = 'block';
+                        adminCodeInput.required = true;
+                        console.log('✅ Admin code field shown');
+                    } else {
+                        adminCodeGroup.style.display = 'none';
+                        adminCodeInput.required = false;
+                        adminCodeInput.value = '';
+                        console.log('❌ Admin code field hidden');
+                    }
+                });
             }
-        }
 
-        // Check if server is running on page load
-        window.addEventListener('load', async function() {
-            try {
-                const response = await fetch(`${apiUrl}/`);
-                console.log('Server is running!');
-            } catch (err) {
-                console.error('Server is not running. Please start your Node.js server with: node server.js');
+            // Sign Up Form
+            document.getElementById('signupForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const category = document.getElementById('category').value;
+                const adminCode = document.getElementById('adminCode').value;
                 const messageElem = document.getElementById('message');
-                messageElem.textContent = 'Warning: Server connection failed. Please make sure the server is running.';
-                messageElem.classList.add('error');
-            }
-        });
+                
+                messageElem.textContent = '';
+                messageElem.classList.remove('success', 'error');
 
-        // Terms and Conditions Modal
-        function showTerms(e) {
-            e.preventDefault();
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.style.display = 'block';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
-                    <h2>📜 Terms and Conditions</h2>
-                    
-                    <p><strong>Last Updated:</strong> November 17, 2025</p>
-                    
-                    <h3>1. Acceptance of Terms</h3>
-                    <p>By creating an account with Barangay Pembo System, you agree to comply with and be bound by these Terms and Conditions.</p>
-                    
-                    <h3>2. User Responsibilities</h3>
-                    <ul>
-                        <li>Provide accurate and complete information during registration</li>
-                        <li>Maintain the confidentiality of your account credentials</li>
-                        <li>Use the system only for legitimate barangay-related purposes</li>
-                        <li>Not share your account with others</li>
-                    </ul>
-                    
-                    <h3>3. Acceptable Use</h3>
-                    <p>Users must not:</p>
-                    <ul>
-                        <li>Submit false or fraudulent applications</li>
-                        <li>Attempt to access unauthorized areas of the system</li>
-                        <li>Upload malicious content or viruses</li>
-                        <li>Harass or abuse barangay officials or staff</li>
-                    </ul>
-                    
-                    <h3>4. Privacy and Data Protection</h3>
-                    <p>Your personal information will be handled in accordance with our Privacy Policy and applicable data protection laws.</p>
-                    
-                    <h3>5. Service Availability</h3>
-                    <p>We strive to maintain system availability but do not guarantee uninterrupted access. The barangay reserves the right to modify or discontinue services.</p>
-                    
-                    <h3>6. Termination</h3>
-                    <p>The barangay may suspend or terminate your account if you violate these terms or engage in fraudulent activities.</p>
-                    
-                    <h3>7. Changes to Terms</h3>
-                    <p>We reserve the right to update these Terms and Conditions. Continued use after changes constitutes acceptance.</p>
-                    
-                    <p style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                        <strong>Contact:</strong> For questions, contact Barangay Pembo at pembo@barangay.gov.ph
-                    </p>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) modal.remove();
-            });
-        }
+                // ✅ VALIDATE ADMIN CODE IF ADMIN CATEGORY
+                if (category === 'Admin' && !adminCode) {
+                    messageElem.textContent = '⚠️ Admin verification code is required';
+                    messageElem.classList.add('error');
+                    return;
+                }
 
-        function showPrivacy(e) {
-            e.preventDefault();
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.style.display = 'block';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
-                    <h2>🔒 Privacy Policy</h2>
+                // Validate password strength
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[a-z]/.test(password)) score++;
+                if (/\d/.test(password)) score++;
+                if (/[@$!%*?&]/.test(password)) score++;
+
+                if (score < 3) {
+                    messageElem.textContent = 'Password is too weak. Please use a stronger password.';
+                    messageElem.classList.add('error');
+                    return;
+                }
+
+                messageElem.textContent = 'Creating account...';
+                messageElem.classList.add('success');
+
+                try {
+                    const res = await fetch(`${apiUrl}/signup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, category, adminCode })
+                    });
+                    const data = await res.json();
                     
-                    <p><strong>Effective Date:</strong> November 17, 2025</p>
+                    console.log('Signup response:', data);
                     
-                    <h3>1. Information We Collect</h3>
-                    <p>We collect the following information:</p>
-                    <ul>
-                        <li><strong>Personal Information:</strong> Email address, name, contact number, address</li>
-                        <li><strong>Document Information:</strong> Valid IDs, proof of residency, application details</li>
-                        <li><strong>Usage Data:</strong> Login times, IP addresses, system interactions</li>
-                    </ul>
+                    messageElem.textContent = data.message;
                     
-                    <h3>2. How We Use Your Information</h3>
-                    <ul>
-                        <li>Process barangay document applications</li>
-                        <li>Schedule and manage appointments</li>
-                        <li>Verify resident identity and residency</li>
-                        <li>Send notifications and updates</li>
-                        <li>Improve system security and functionality</li>
-                        <li>Comply with legal requirements</li>
-                    </ul>
-                    
-                    <h3>3. Data Sharing</h3>
-                    <p>Your information will only be shared:</p>
-                    <ul>
-                        <li>With authorized barangay officials for legitimate purposes</li>
-                        <li>With government agencies when required by law</li>
-                        <li>We will NEVER sell your personal information to third parties</li>
-                    </ul>
-                    
-                    <h3>4. Data Security</h3>
-                    <p>We implement security measures including:</p>
-                    <ul>
-                        <li>Encrypted password storage</li>
-                        <li>Secure authentication systems</li>
-                        <li>Regular security audits</li>
-                        <li>Access controls for barangay staff</li>
-                    </ul>
-                    
-                    <h3>5. Your Rights</h3>
-                    <p>You have the right to:</p>
-                    <ul>
-                        <li>Access your personal data</li>
-                        <li>Request corrections to inaccurate information</li>
-                        <li>Request deletion of your account (subject to legal requirements)</li>
-                        <li>Withdraw consent for data processing</li>
-                    </ul>
-                    
-                    <h3>6. Data Retention</h3>
-                    <p>We retain your information for as long as necessary to provide services and comply with legal obligations. Application records may be kept for archival purposes.</p>
-                    
-                    <h3>7. Cookies</h3>
-                    <p>We use session cookies to maintain your login status and improve user experience.</p>
-                    
-                    <h3>8. Children's Privacy</h3>
-                    <p>Our system is not intended for use by individuals under 18 without parental consent.</p>
-                    
-                    <p style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                        <strong>Contact:</strong> For privacy concerns, email pembo@barangay.gov.ph
-                    </p>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) modal.remove();
+                    if (res.status === 201) {
+                        document.getElementById('signupForm').style.display = 'none';
+                        document.getElementById('otpSection').style.display = 'block';
+                        messageElem.classList.add('success');
+                        messageElem.classList.remove('error');
+                    } else {
+                        messageElem.classList.add('error');
+                        messageElem.classList.remove('success');
+                    }
+                } catch (err) {
+                    console.error('Signup error:', err);
+                    messageElem.textContent = 'Error during sign-up. Make sure the server is running.';
+                    messageElem.classList.add('error');
+                    messageElem.classList.remove('success');
+                }
             });
-        }
+
+            window.verifyOTP = async function() {
+                const email = document.getElementById('email').value;
+                const otp = document.getElementById('otp').value;
+                const messageElem = document.getElementById('message');
+                
+                messageElem.textContent = '';
+                messageElem.classList.remove('success', 'error');
+
+                if (otp.length !== 6) {
+                    messageElem.textContent = 'Please enter a valid 6-digit OTP';
+                    messageElem.classList.add('error');
+                    return;
+                }
+
+                messageElem.textContent = 'Verifying OTP...';
+                messageElem.classList.add('success');
+
+                try {
+                    const res = await fetch(`${apiUrl}/verify-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, otp })
+                    });
+                    const data = await res.json();
+                    
+                    console.log('OTP verification response:', data);
+                    
+                    messageElem.textContent = data.message;
+                    
+                    if (res.status === 200) {
+                        messageElem.classList.add('success');
+                        messageElem.classList.remove('error');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 2000);
+                    } else {
+                        messageElem.classList.add('error');
+                        messageElem.classList.remove('success');
+                    }
+                } catch (err) {
+                    console.error('OTP verification error:', err);
+                    messageElem.textContent = 'Error verifying OTP. Please try again.';
+                    messageElem.classList.add('error');
+                    messageElem.classList.remove('success');
+                }
+            };
+
+            // Check if server is running on page load
+            (async function() {
+                try {
+                    const response = await fetch(`${apiUrl}/`);
+                    console.log('✅ Server is running!');
+                } catch (err) {
+                    console.error('❌ Server is not running');
+                    const messageElem = document.getElementById('message');
+                    messageElem.textContent = 'Warning: Server connection failed. Please make sure the server is running.';
+                    messageElem.classList.add('error');
+                }
+            })();
+
+            // Make functions global for onclick attributes
+            window.showTerms = function(e) {
+                e.preventDefault();
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'block';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+                        <h2>📜 Terms and Conditions</h2>
+                        <p><strong>Last Updated:</strong> November 17, 2025</p>
+                        <h3>1. Acceptance of Terms</h3>
+                        <p>By creating an account with Barangay Pembo System, you agree to comply with and be bound by these Terms and Conditions.</p>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) modal.remove();
+                });
+            };
+
+            window.showPrivacy = function(e) {
+                e.preventDefault();
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'block';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+                        <h2>🔒 Privacy Policy</h2>
+                        <p><strong>Effective Date:</strong> November 17, 2025</p>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) modal.remove();
+                });
+            };
+
+        }); // END OF DOMContentLoaded
+    
+    
     </script>
 </body>
 </html>

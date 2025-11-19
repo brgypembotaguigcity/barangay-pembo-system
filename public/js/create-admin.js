@@ -38,7 +38,18 @@ async function createAdmin() {
       console.log('✅ Updated to admin role');
       process.exit(0);
     }
-    
+
+    //
+    fetch('http://localhost:3000/signup', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    email, 
+    password, 
+    category,
+    adminCode: document.getElementById('adminCode').value  // ✅ DAGDAG ITO
+  })
+})
     // Create new admin
     const hashedPassword = await bcrypt.hash(password, 10);
     const admin = new User({

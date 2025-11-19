@@ -891,7 +891,6 @@
             `).join('');
         }
 
-// ✅ UPDATED: Load Applications with FILTER and SEARCH
 function loadApplications() {
     const list = document.getElementById('applicationsList');
     
@@ -931,9 +930,7 @@ function loadApplications() {
                         style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
                         <option value="all">All Types</option>
                         <option value="Barangay Clearance">Barangay Clearance</option>
-                        <option value="Certificate of Residency">Certificate of Residency</option>
-                        <option value="Certificate of Indigency">Certificate of Indigency</option>
-                        <option value="Business Permit">Business Permit</option>
+                        <option value="Barangay ID">Barangay ID</option>
                     </select>
                 </div>
                 
@@ -949,6 +946,18 @@ function loadApplications() {
                     </select>
                 </div>
                 
+                <!-- Delivery Status Filter -->
+                <div>
+                    <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📬 Delivery Status</label>
+                    <select id="filterDeliveryStatus" onchange="filterApplications()" 
+                        style="width: 100%; padding: 10px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        <option value="all">All Status</option>
+                        <option value="Received">✅ Received</option>
+                        <option value="Not Received">❌ Not Received</option>
+                        <option value="pending">⏳ Awaiting Confirmation</option>
+                    </select>
+                </div>
+                
                 <!-- Sort By -->
                 <div>
                     <label style="display: block; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔄 Sort By</label>
@@ -959,7 +968,7 @@ function loadApplications() {
                         <option value="name">Name (A-Z)</option>
                     </select>
                 </div>
-                
+
                 <!-- Reset Button -->
                 <div>
                     <button onclick="resetApplicationFilters()" 
@@ -980,12 +989,12 @@ function loadApplications() {
     filterApplications();
 }
 
-// Filter Applications Function
 function filterApplications() {
     const searchTerm = document.getElementById('searchApplications')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('filterAppStatus')?.value || 'all';
     const typeFilter = document.getElementById('filterAppType')?.value || 'all';
     const paymentFilter = document.getElementById('filterPaymentStatus')?.value || 'all';
+    const deliveryFilter = document.getElementById('filterDeliveryStatus')?.value || 'all';
     const sortBy = document.getElementById('sortApplications')?.value || 'newest';
     
     // Filter applications
@@ -1004,7 +1013,17 @@ function filterApplications() {
         if (paymentFilter === 'Pending') matchesPayment = app.paymentStatus === 'Pending';
         if (paymentFilter === 'none') matchesPayment = !app.gcashReference;
         
-        return matchesSearch && matchesStatus && matchesType && matchesPayment;
+        // ✅ DELIVERY STATUS FILTER
+        let matchesDelivery = true;
+        if (deliveryFilter === 'Received') {
+            matchesDelivery = app.deliveryStatus === 'Received';
+        } else if (deliveryFilter === 'Not Received') {
+            matchesDelivery = app.deliveryStatus === 'Not Received';
+        } else if (deliveryFilter === 'pending') {
+            matchesDelivery = !app.deliveryStatus && app.status === 'Approved';
+        }
+        
+        return matchesSearch && matchesStatus && matchesType && matchesPayment && matchesDelivery;
     });
     
     // Sort applications
@@ -1036,13 +1055,24 @@ function filterApplications() {
             <div class="app-header">
                 <div class="app-title">
                     <h3>${app.firstName} ${app.lastName}</h3>
-                    <span class="status-badge ${app.status.toLowerCase()}">${app.status}</span>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <span class="status-badge ${app.status.toLowerCase()}">${app.status}</span>
+                        ${app.status === 'Approved' && app.deliveryStatus ? `
+                            <span class="status-badge" style="background: ${app.deliveryStatus === 'Received' ? '#d1fae5' : '#fee2e2'}; color: ${app.deliveryStatus === 'Received' ? '#065f46' : '#991b1b'};">
+                                ${app.deliveryStatus === 'Received' ? '✅ Delivered' : '❌ Not Delivered'}
+                            </span>
+                        ` : app.status === 'Approved' ? `
+                            <span class="status-badge" style="background: #fef3c7; color: #92400e;">
+                                ⏳ Awaiting Confirmation
+                            </span>
+                        ` : ''}
+                    </div>
                 </div>
                 <div class="app-actions">
                     ${app.status === 'Pending' ? `
-    <button class="btn btn-approve" onclick="approveApplication('${app._id}')">✓ Approve</button>
-    <button class="btn btn-reject" onclick="rejectApplication('${app._id}')">✗ Reject</button>
-` : ''}
+                        <button class="btn btn-approve" onclick="approveApplication('${app._id}')">✓ Approve</button>
+                        <button class="btn btn-reject" onclick="rejectApplication('${app._id}')">✗ Reject</button>
+                    ` : ''}
                 </div>
             </div>
             <div class="app-details">
@@ -1053,7 +1083,24 @@ function filterApplications() {
                 <p><strong>Date of Birth:</strong> ${app.dateOfBirth ? new Date(app.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
                 ${app.purpose ? `<p><strong>Purpose:</strong> ${app.purpose}</p>` : ''}
                 <p><strong>Date Applied:</strong> ${new Date(app.createdAt).toLocaleDateString()}</p>
+                <p><strong>Delivery Method:</strong> ${app.deliveryMethod === 'deliver' ? '🚚 Home Delivery' : '🏢 Pickup at Barangay Hall'}</p>
                 <p><strong>Application ID:</strong> ${app._id}</p>
+                
+                ${app.deliveryStatus ? `
+                    <div style="margin-top: 15px; padding: 15px; background: ${app.deliveryStatus === 'Received' ? '#d1fae5' : '#fee2e2'}; border-left: 4px solid ${app.deliveryStatus === 'Received' ? '#10b981' : '#ef4444'}; border-radius: 8px;">
+                        <p style="color: ${app.deliveryStatus === 'Received' ? '#065f46' : '#991b1b'}; font-weight: 600; margin: 0;">
+                            ${app.deliveryStatus === 'Received' ? '✅ Resident confirmed document received' : '❌ Resident reported document NOT received'}
+                        </p>
+                        <p style="color: #666; font-size: 12px; margin-top: 5px;">
+                            Updated: ${app.deliveryStatusDate ? new Date(app.deliveryStatusDate).toLocaleString() : 'N/A'}
+                        </p>
+                    </div>
+                ` : app.status === 'Approved' ? `
+                    <div style="margin-top: 15px; padding: 12px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                        <p style="color: #92400e; font-weight: 600; margin: 0;">⏳ Awaiting delivery confirmation from resident</p>
+                    </div>
+                ` : ''}
+                
                 ${app.gcashReference ? `
                     <div style="margin-top: 15px; padding: 15px; background: #f0f9ff; border-left: 4px solid #007dff; border-radius: 8px;">
                         <p style="font-weight: 700; color: #007dff; margin-bottom: 10px;">💰 GCash Payment Information</p>
@@ -1108,6 +1155,7 @@ function resetApplicationFilters() {
     document.getElementById('filterAppStatus').value = 'all';
     document.getElementById('filterAppType').value = 'all';
     document.getElementById('filterPaymentStatus').value = 'all';
+    document.getElementById('filterDeliveryStatus').value = 'all';
     document.getElementById('sortApplications').value = 'newest';
     filterApplications();
 }

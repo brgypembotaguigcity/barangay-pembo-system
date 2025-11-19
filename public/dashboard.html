@@ -691,14 +691,14 @@
         </select>
     </div>
 
-    <div class="form-group">
-        <label>Upload Valid ID *</label>
-        <div class="upload-area" id="validIdArea" onclick="document.getElementById('validId').click()">
-            <p>📎 Click to upload</p>
-            <p style="font-size: 12px; color: #666;">Maximum file size: 5MB</p>
-        </div>
-        <input type="file" name="validId" id="validId" style="display: none;" accept="image/*" required>
+   <div class="form-group" id="validIdGroup">
+    <label id="validIdLabel">Upload Valid ID *</label>
+    <div class="upload-area" id="validIdArea" onclick="document.getElementById('validId').click()">
+        <p id="validIdText">📎 Click to upload</p>
+        <p style="font-size: 12px; color: #666;" id="validIdHint">Maximum file size: 5MB</p>
     </div>
+    <input type="file" name="validId" id="validId" style="display: none;" accept="image/*" required>
+</div>
 
     <div class="form-group">
         <label>Upload Proof of Address *</label>
@@ -1004,24 +1004,56 @@ async function loadApplicationsFromDatabase() {
         return;
     }
 
-    const appHTML = myApplications.map(app => `
-        <div class="application-item">
-            <div class="app-info">
-                <h4>${app.type}</h4>
-                <p><strong>Name:</strong> ${app.firstName} ${app.lastName}</p>
-                <p><strong>Date Applied:</strong> ${new Date(app.createdAt).toLocaleDateString()}</p>
-                ${app.gcashReference ? `
-                    <p style="color: #10b981; font-weight: 600;">
-                        💰 Paid via GCash: ${app.gcashReference}
+   const appHTML = myApplications.map(app => `
+    <div class="application-item">
+        <div class="app-info">
+            <h4>${app.type}</h4>
+            <p><strong>Name:</strong> ${app.firstName} ${app.lastName}</p>
+            <p><strong>Date Applied:</strong> ${new Date(app.createdAt).toLocaleDateString()}</p>
+            ${app.gcashReference ? `
+                <p style="color: #10b981; font-weight: 600;">
+                    💰 Paid via GCash: ${app.gcashReference}
+                </p>
+                <p style="color: #666; font-size: 12px;">
+                    Payment Status: <span class="status-badge ${app.paymentStatus?.toLowerCase() || 'pending'}">${app.paymentStatus || 'Pending Verification'}</span>
+                </p>
+            ` : ''}
+            
+            <!-- 🆕 DELIVERY STATUS -->
+            ${app.deliveryStatus ? `
+                <div style="margin-top: 15px; padding: 12px; background: ${app.deliveryStatus === 'Received' ? '#d1fae5' : '#fee2e2'}; border-radius: 8px;">
+                    <p style="color: ${app.deliveryStatus === 'Received' ? '#065f46' : '#991b1b'}; font-weight: 600; margin: 0;">
+                        ${app.deliveryStatus === 'Received' ? '✅ Document Received' : '❌ Document Not Received'}
                     </p>
-                    <p style="color: #666; font-size: 12px;">
-                        Payment Status: <span class="status-badge ${app.paymentStatus?.toLowerCase() || 'pending'}">${app.paymentStatus || 'Pending Verification'}</span>
+                    <p style="color: #666; font-size: 12px; margin-top: 5px;">
+                        Updated: ${new Date(app.deliveryStatusDate).toLocaleDateString()}
                     </p>
-                ` : ''}
-            </div>
-            <span class="status-badge ${app.status.toLowerCase()}">${app.status}</span>
+                </div>
+            ` : app.status === 'Approved' ? `
+                <div style="margin-top: 15px; padding: 15px; background: #fffbeb; border-radius: 8px; border: 2px dashed #f59e0b;">
+                    <p style="color: #92400e; font-weight: 600; margin-bottom: 10px;">📬 Document Status</p>
+                    <p style="color: #78350f; font-size: 13px; margin-bottom: 12px;">
+                        Have you received your ${app.type}?
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="updateDeliveryStatus('${app._id}', 'Received')" 
+                            style="flex: 1; padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                            ✅ Received
+                        </button>
+                        <button onclick="updateDeliveryStatus('${app._id}', 'Not Received')" 
+                            style="flex: 1; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                            ❌ Did Not Receive
+                        </button>
+                    </div>
+                    <p style="color: #9ca3af; font-size: 11px; margin-top: 8px; text-align: center;">
+                        Click after 24 hours if not received
+                    </p>
+                </div>
+            ` : ''}
         </div>
-    `).join('');
+        <span class="status-badge ${app.status.toLowerCase()}">${app.status}</span>
+    </div>
+`).join('');
 
     recentDiv.innerHTML = appHTML;
     allDiv.innerHTML = appHTML;
@@ -1051,7 +1083,7 @@ async function loadApplicationsFromDatabase() {
     }
 }
 
-        function openApplicationForm(type) {
+    function openApplicationForm(type) {
     document.getElementById('modalTitle').textContent = `Apply for ${type}`;
     document.getElementById('documentType').value = type;
     
@@ -1069,8 +1101,18 @@ async function loadApplicationsFromDatabase() {
     } else {
         document.getElementById('purposeGroup').style.display = 'none';
     }
+    
+    // 🆕 CHANGE LABEL FOR BARANGAY ID
+    if (type === 'Barangay ID') {
+        document.getElementById('validIdLabel').textContent = 'Upload 1x1 Photo *';
+        document.getElementById('validIdText').textContent = '📷 Click to upload your 1x1 photo';
+        document.getElementById('validIdHint').textContent = 'White background, passport size (Maximum 5MB)';
+    } else {
+        document.getElementById('validIdLabel').textContent = 'Upload Valid ID *';
+        document.getElementById('validIdText').textContent = '📎 Click to upload';
+        document.getElementById('validIdHint').textContent = 'Maximum file size: 5MB';
+    }
 }
-
         function closeModal(type) {
     if (type === 'application') {
         document.getElementById('applicationModal').classList.remove('active');
@@ -1624,6 +1666,44 @@ async function updateProfile() {
     
     alert('✅ Profile updated successfully!\n\nYour information has been saved.');
     document.getElementById('profileName').textContent = fullName;
+}
+
+// 🆕 UPDATE DELIVERY STATUS
+async function updateDeliveryStatus(applicationId, status) {
+    const confirmMsg = status === 'Received' 
+        ? 'Confirm that you have received your document?' 
+        : 'Confirm that you have NOT received your document after 24+ hours?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const res = await fetch(`${apiUrl}/application/delivery-status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                applicationId, 
+                deliveryStatus: status 
+            })
+        });
+        
+        if (res.ok) {
+            alert(status === 'Received' 
+                ? '✅ Thank you for confirming! Your feedback has been recorded.' 
+                : '⚠️ We apologize for the inconvenience. The barangay office has been notified.');
+            
+            await loadApplicationsFromDatabase();
+        } else {
+            alert('Failed to update delivery status');
+        }
+    } catch (err) {
+        console.error('Error:', err);
+        alert('Error updating status');
+    }
 }
 
     </script>
