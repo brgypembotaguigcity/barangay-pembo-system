@@ -12,23 +12,46 @@ require('dotenv').config();
 
 const app = express();
 
+// ===============================
+//  ✔ FIXED MONGO CONNECTION
+// ===============================
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pembo-system';
 
-// MongoDB Connection
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pembo-system';
-
-mongoose.connect(mongoURI, {
+mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log('✅ MongoDB connected to:', mongoURI.includes('mongodb.net') ? 'Cloud Database' : 'Local Database'))
-  .catch(err => console.log('❌ MongoDB connection error:', err));
+.then(() => console.log("✔ MongoDB connected:", MONGO_URI))
+.catch(err => console.error("❌ MongoDB Error:", err));
 
-// Session Store
+
+// ===============================
+//  ✔ FIXED SESSION STORE
+// ===============================
 const store = new MongoDBStore({
-  uri: mongoURI,
+  uri: MONGO_URI,       // IMPORTANT FIX
   collection: 'sessions'
 });
-store.on('error', function(error) { console.log(error); });
+
+store.on('error', function (error) {
+  console.error("❌ Session Store Error:", error);
+});
+
+
+// ===============================
+//  EXPRESS SESSION
+// ===============================
+app.use(session({
+  secret: process.env.SESSION_SECRET || "fallback_secret",
+  resave: false,
+  saveUninitialized: false,
+  store: store,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7,  // 7 days
+    httpOnly: true,
+    secure: false                    // set true if HTTPS
+  }
+}));
 
 // Middleware
 app.use(express.json());
@@ -164,13 +187,41 @@ const Payment = mongoose.model('Payment', paymentSchema);
 
 // ==================== NODEMAILER SETUP ====================
 
+// ==================== NODEMAILER SETUP (FIXED) ====================
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 587,  // ✅ CHANGED FROM 465 TO 587
+  secure: false,  // ✅ CHANGED FROM true TO false (for port 587)
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  connectionTimeout: 10000,  // ✅ ADD THIS - 10 seconds timeout
+  socketTimeout: 10000,      // ✅ ADD THIS - 10 seconds socket timeout
+});
+
+// ✅ TEST CONNECTION ON SERVER START
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ EMAIL CONFIG ERROR:", error);
+  } else {
+    console.log("✅ EMAIL SERVICE READY - Can send emails!");
   }
 });
+
+// ==================== SEND MAIL WRAPPER (OPTIONAL BUT RECOMMENDED) ====================
+
+const sendEmail = async (mailOptions) => {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent to ${mailOptions.to}: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ EMAIL FAILED to ${mailOptions.to}:`, error.message);
+    throw error;
+  }
+};
 
 // ==================== MIDDLEWARE ====================
 
