@@ -185,41 +185,44 @@ const paymentSchema = new mongoose.Schema({
 });
 const Payment = mongoose.model('Payment', paymentSchema);
 
-// ==================== NODEMAILER SETUP ====================
+// ==================== RESEND SETUP (FIXED) ====================
 
-// ==================== NODEMAILER SETUP (FIXED) ====================
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,  // ✅ CHANGED FROM 465 TO 587
-  secure: false,  // ✅ CHANGED FROM true TO false (for port 587)
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  connectionTimeout: 10000,  // ✅ ADD THIS - 10 seconds timeout
-  socketTimeout: 10000,      // ✅ ADD THIS - 10 seconds socket timeout
-});
+// ✅ FIXED: Initialize Resend with proper error handling
+if (!process.env.RESEND_API_KEY) {
+  console.error('❌ CRITICAL: RESEND_API_KEY not found in .env file!');
+  console.error('Please add RESEND_API_KEY=re_xxxxx to your .env file');
+  process.exit(1);
+}
 
-// ✅ TEST CONNECTION ON SERVER START
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ EMAIL CONFIG ERROR:", error);
-  } else {
-    console.log("✅ EMAIL SERVICE READY - Can send emails!");
-  }
-});
-
-// ==================== SEND MAIL WRAPPER (OPTIONAL BUT RECOMMENDED) ====================
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (mailOptions) => {
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent to ${mailOptions.to}: ${info.messageId}`);
-    return info;
+    // ✅ Use process.env.EMAIL_FROM instead of process.env.EMAIL_FROM
+    const fromEmail = process.env.EMAIL_FROM || 'noreply@barangaypembo.com';
+    
+    console.log('📧 Sending email:', {
+      from: fromEmail,
+      to: mailOptions.to,
+      subject: mailOptions.subject
+    });
+
+    const result = await resend.emails.send({
+      from: fromEmail,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      html: mailOptions.html || mailOptions.text
+    });
+    
+    console.log(`✅ Email sent successfully to ${mailOptions.to}`);
+    console.log('Response:', result);
+    return result;
   } catch (error) {
-    console.error(`❌ EMAIL FAILED to ${mailOptions.to}:`, error.message);
-    throw error;
+    console.error(`❌ Email failed for ${mailOptions.to}:`, error);
+    console.error('Error details:', error.message);
+    return { error: error.message };
   }
 };
 
@@ -291,8 +294,8 @@ app.post('/signup', async (req, res) => {
     
     console.log('✅ User created with role:', role);
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendEmail({
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: role === 'admin' ? 'Admin Account Verification - Barangay Pembo' : 'Verify Your Pembo System Account',
       text: `Your OTP is ${otp}. It expires in 10 minutes.${role === 'admin' ? '\n\nThis is an ADMIN account registration.' : ''}`
@@ -345,8 +348,8 @@ app.post('/login', async (req, res) => {
     user.otpExpires = otpExpires;
     await user.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendEmail({
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: 'Login Verification OTP - Barangay Pembo',
       text: `Your login OTP is ${otp}. It expires in 10 minutes.`
@@ -428,8 +431,8 @@ app.post('/admin-login', async (req, res) => {
 
     console.log('Admin OTP generated:', otp);
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendEmail({
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: 'Admin Login OTP - Barangay Pembo',
       text: `Your admin login OTP is ${otp}. It expires in 10 minutes.\n\nIf you did not attempt to login, please contact support immediately.`
@@ -501,8 +504,8 @@ app.post('/forgot-password', async (req, res) => {
     user.otpExpires = otpExpires;
     await user.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendEmail({
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: 'Password Reset OTP',
       text: `Your OTP for password reset is ${otp}. It expires in 10 minutes.`
@@ -661,8 +664,8 @@ app.put('/admin/approve', authenticateToken, isAdmin, async (req, res) => {
           ? `Your ${application.type} will be delivered to your registered address within 24 hours. Please ensure someone is available to receive the document.`
           : `Your ${application.type} is ready for pickup at the Barangay Hall. You may claim it after 24 hours during office hours (8:00 AM - 5:00 PM, Monday to Friday).`;
         
-        await transporter.sendMail({
-  from: process.env.EMAIL_USER,
+        await sendEmail({
+  from: process.env.EMAIL_FROM,
   to: application.email,
   subject: `Application Approved - ${application.type}`,
   html: `
@@ -712,8 +715,8 @@ app.put('/admin/approve', authenticateToken, isAdmin, async (req, res) => {
       else if (status === 'Rejected' || status === 'Reject') {
         console.log('📧 Sending REJECTION email to:', application.email);
         
-        const emailResult = await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+        const emailResult = await sendEmail({
+          from: process.env.EMAIL_FROM,
           to: application.email,
           subject: `Application Update - ${application.type}`,
           html: `
@@ -754,7 +757,7 @@ app.put('/admin/approve', authenticateToken, isAdmin, async (req, res) => {
     } catch (emailError) {
       console.error('❌ EMAIL ERROR:', emailError);
       console.error('Email details:', {
-        from: process.env.EMAIL_USER,
+        from: process.env.EMAIL_FROM,
         to: application.email,
         status: status
       });
@@ -883,8 +886,8 @@ app.put('/admin/appointment/update', authenticateToken, isAdmin, async (req, res
           `;
         }
         
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+        await sendEmail({
+          from: process.env.EMAIL_FROM,
           to: appointment.email,
           subject: 'Appointment Confirmed - Barangay Pembo',
           html: `
@@ -955,8 +958,8 @@ app.put('/admin/appointment/update', authenticateToken, isAdmin, async (req, res
       else if (status === 'Cancelled' || status === 'Canceled') {
         console.log('📧 Sending CANCELLATION email to:', appointment.email);
         
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+        await sendEmail({
+          from: process.env.EMAIL_FROM,
           to: appointment.email,
           subject: 'Appointment Cancelled - Barangay Pembo',
           html: `
@@ -1097,8 +1100,8 @@ app.put('/complaint/response', authenticateToken, isAdmin, async (req, res) => {
 app.post('/notify', authenticateToken, async (req, res) => {
   try {
     const { email, message } = req.body;
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await sendEmail({
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: 'Pembo System Notification',
       text: message
@@ -1274,8 +1277,8 @@ try {
     const adminEmails = adminUsers.map(admin => admin.email).join(', ');
     
     if (adminEmails) {
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
+        await sendEmail({
+            from: process.env.EMAIL_FROM,
             to: adminEmails,
             subject: `📬 Document Delivery Update - ${application.type}`,
             html: `
