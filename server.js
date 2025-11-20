@@ -8,35 +8,71 @@ const path = require('path');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 
-// ===============================
-//  ✔ FIXED MONGO CONNECTION
-// ===============================
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pembo-system';
+// ✅ CORS - ALLOW ALL ORIGINS
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+app.options('*', cors());
+
+// ✅ LOCAL MONGODB CONNECTION
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/brgypembotaguigcity';
+
+console.log('🔗 Connecting to MongoDB...');
+console.log('📍 Database URI:', MONGO_URI);
 
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
 })
-.then(() => console.log("✔ MongoDB connected:", MONGO_URI))
-.catch(err => console.error("❌ MongoDB Error:", err));
+.then(() => {
+  console.log("✅ MongoDB connected successfully");
+  console.log("📍 Database:", mongoose.connection.name);
+  console.log("🌐 MongoDB running on localhost:27017");
+})
+.catch(err => {
+  console.error("❌ MongoDB Connection Error:", err.message);
+  console.error("💡 Make sure MongoDB is running: sudo systemctl status mongodb");
+  process.exit(1);
+});
 
+// ✅ Handle MongoDB connection errors after initial connection
+mongoose.connection.on('error', err => {
+  console.error('❌ MongoDB runtime error:', err);
+});
 
-// ===============================
-//  ✔ FIXED SESSION STORE
-// ===============================
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected. Attempting to reconnect...');
+});
+
+// ✅ SESSION STORE - LOCAL MONGODB
 const store = new MongoDBStore({
-  uri: MONGO_URI,       // IMPORTANT FIX
-  collection: 'sessions'
+  uri: MONGO_URI,
+  collection: 'sessions',
+  connectionOptions: {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 10000
+  }
 });
 
 store.on('error', function (error) {
   console.error("❌ Session Store Error:", error);
 });
 
+store.on('connected', function() {
+  console.log('✅ Session store connected to MongoDB');
+});
 
 // ===============================
 //  EXPRESS SESSION
@@ -53,10 +89,13 @@ app.use(session({
   }
 }));
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ✅ Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ✅ IMPORTANT: Serve static files correctly
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ FIXED: Multer configuration with file validation
 const storage = multer.diskStorage({
@@ -87,15 +126,6 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  store: store
-}));
 
 // ==================== SCHEMAS ====================
 
@@ -187,13 +217,18 @@ const Payment = mongoose.model('Payment', paymentSchema);
 
 // ==================== NODEMAILER SETUP (GMAIL) ====================
 
-// ✅ Create Gmail transporter
+// ✅ FIXED: Gmail transporter optimized for Render
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: 'gmail',  // ✅ Use service instead of host/port
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  pool: true,  // ✅ Use connection pooling
+  maxConnections: 5,
+  maxMessages: 10,
+  rateDelta: 1000,
+  rateLimit: 5
 });
 
 // ✅ Verify connection
@@ -205,30 +240,38 @@ transporter.verify(function(error, success) {
   }
 });
 
-// ✅ Send email function
-const sendEmail = async (mailOptions) => {
-  try {
-    console.log('📧 Sending email:', {
-      from: mailOptions.from || process.env.EMAIL_FROM,
-      to: mailOptions.to,
-      subject: mailOptions.subject
-    });
+// ✅ FIXED: Send email with retry logic for Render
+const sendEmail = async (mailOptions, retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`📧 Sending email (attempt ${attempt}/${retries}):`, {
+        from: mailOptions.from || process.env.EMAIL_FROM,
+        to: mailOptions.to,
+        subject: mailOptions.subject
+      });
 
-    const result = await transporter.sendMail({
-      from: mailOptions.from || process.env.EMAIL_FROM,
-      to: mailOptions.to,
-      subject: mailOptions.subject,
-      text: mailOptions.text,
-      html: mailOptions.html
-    });
-    
-    console.log(`✅ Email sent successfully to ${mailOptions.to}`);
-    console.log('Message ID:', result.messageId);
-    return result;
-  } catch (error) {
-    console.error(`❌ Email failed for ${mailOptions.to}:`, error);
-    console.error('Error details:', error.message);
-    return { error: error.message };
+      const result = await transporter.sendMail({
+        from: mailOptions.from || process.env.EMAIL_FROM,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        text: mailOptions.text,
+        html: mailOptions.html
+      });
+      
+      console.log(`✅ Email sent successfully to ${mailOptions.to}`);
+      console.log('Message ID:', result.messageId);
+      return result;
+    } catch (error) {
+      console.error(`❌ Email attempt ${attempt} failed for ${mailOptions.to}:`, error.message);
+      
+      if (attempt === retries) {
+        console.error('❌ All email attempts failed:', error);
+        return { error: error.message };
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+    }
   }
 };
 
@@ -1118,16 +1161,26 @@ app.post('/notify', authenticateToken, async (req, res) => {
   }
 });
 
+// ✅ ROOT ROUTE - Must serve index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 app.get('/dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// ✅ Health check endpoint (useful for monitoring)
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    db: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.get('/admin/residents', authenticateToken, isAdmin, async (req, res) => {
@@ -1257,94 +1310,23 @@ app.put('/admin/application/verify-payment', authenticateToken, isAdmin, async (
   }
 });
 
+// ✅ PORT Configuration for VPS
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-// 🆕 UPDATE DELIVERY STATUS FROM RESIDENT
-app.put('/application/delivery-status', authenticateToken, async (req, res) => {
-  try {
-    const { applicationId, deliveryStatus } = req.body;
-    
-    const application = await Application.findByIdAndUpdate(
-      applicationId,
-      { 
-        deliveryStatus,
-        deliveryStatusDate: new Date()
-      },
-      { new: true }
-    );
-    
-    if (!application) {
-      return res.status(404).json({ message: 'Application not found' });
-    }
-    
-    // 🆕 SEND EMAIL TO ADMIN
-try {
-    const adminUsers = await User.find({ role: 'admin' });
-    const adminEmails = adminUsers.map(admin => admin.email).join(', ');
-    
-    if (adminEmails) {
-        await sendEmail({
-            from: process.env.EMAIL_FROM,
-            to: adminEmails,
-            subject: `📬 Document Delivery Update - ${application.type}`,
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: white; border-radius: 15px;">
-                    <div style="background: ${deliveryStatus === 'Received' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'}; padding: 30px; border-radius: 15px 15px 0 0; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 28px;">
-                            ${deliveryStatus === 'Received' ? '✅ Document Received' : '⚠️ Document Not Received'}
-                        </h1>
-                    </div>
-                    
-                    <div style="padding: 30px; background: #f9fafb; border-radius: 0 0 15px 15px;">
-                        <h2 style="color: #1f2937; margin-top: 0;">Delivery Status Update</h2>
-                        
-                        <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                            <p style="margin: 8px 0; color: #374151;"><strong>Resident:</strong> ${application.firstName} ${application.lastName}</p>
-                            <p style="margin: 8px 0; color: #374151;"><strong>Email:</strong> ${application.email}</p>
-                            <p style="margin: 8px 0; color: #374151;"><strong>Contact:</strong> ${application.contact}</p>
-                            <p style="margin: 8px 0; color: #374151;"><strong>Document Type:</strong> ${application.type}</p>
-                            <p style="margin: 8px 0; color: #374151;"><strong>Delivery Method:</strong> ${application.deliveryMethod === 'deliver' ? 'Home Delivery' : 'Pickup at Barangay Hall'}</p>
-                            <p style="margin: 8px 0; color: #374151;"><strong>Status:</strong> <span style="color: ${deliveryStatus === 'Received' ? '#10b981' : '#ef4444'}; font-weight: bold;">${deliveryStatus}</span></p>
-                            <p style="margin: 8px 0; color: #6b7280;"><strong>Date Reported:</strong> ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</p>
-                        </div>
-                        
-                        ${deliveryStatus === 'Not Received' ? `
-                            <div style="background: #fee2e2; padding: 20px; border-left: 4px solid #dc2626; border-radius: 8px; margin-top: 20px;">
-                                <p style="color: #991b1b; font-weight: 600; margin: 0 0 10px 0;">⚠️ Action Required</p>
-                                <p style="color: #7f1d1d; margin: 0;">The resident has reported that they have NOT received their ${application.type} document. Please investigate and follow up on this delivery immediately.</p>
-                            </div>
-                        ` : `
-                            <div style="background: #d1fae5; padding: 20px; border-left: 4px solid #10b981; border-radius: 8px; margin-top: 20px;">
-                                <p style="color: #065f46; font-weight: 600; margin: 0 0 10px 0;">✅ Delivery Confirmed</p>
-                                <p style="color: #047857; margin: 0;">The resident has confirmed receipt of their ${application.type}. This transaction is now complete.</p>
-                            </div>
-                        `}
-                        
-                        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 5px 0;">
-                                <strong>Barangay Pembo Management System</strong>
-                            </p>
-                            <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">
-                                This is an automated notification. Please do not reply to this email.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `
-        });
-        console.log(`✅ Admin notification sent to: ${adminEmails}`);
-    }
-} catch (emailError) {
-    console.error('❌ Email error:', emailError);
-}
-    
-    res.json({ message: 'Delivery status updated', application });
-  } catch (err) {
-    console.error('Error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
+const server = app.listen(PORT, HOST, () => {
+  console.log(`✅ Server running on ${HOST}:${PORT}`);
+  console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 Access server at: http://localhost:${PORT}`);
 });
 
-app.listen(PORT, () => {
-    console.log("Server running on port " + PORT);
+// ✅ Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('⚠️ SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('✅ MongoDB connection closed');
+      process.exit(0);
+    });
+  });
 });

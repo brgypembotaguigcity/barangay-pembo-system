@@ -1,13 +1,19 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/pembo-system', {
+// ✅ Connect to MongoDB
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pembo-system';
+
+mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.log('❌ MongoDB Error:', err));
+.then(() => console.log("✅ MongoDB connected"))
+.catch((err) => {
+  console.error("❌ MongoDB error:", err);
+  process.exit(1);
+});
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -27,13 +33,14 @@ const User = mongoose.model('User', userSchema);
 async function createAdmin() {
   try {
     const email = 'admin@pembo.gov';
-    const password = 'Admin123!'; // CHANGE THIS AFTER FIRST LOGIN
+    const password = 'Admin123!'; // ⚠️ CHANGE THIS AFTER FIRST LOGIN
     
     // Check if exists
     const existing = await User.findOne({ email });
     if (existing) {
       console.log('⚠️  Admin already exists');
       existing.role = 'admin';
+      existing.category = 'Admin';
       await existing.save();
       console.log('✅ Updated to admin role');
       process.exit(0);
@@ -50,7 +57,7 @@ async function createAdmin() {
     adminCode: document.getElementById('adminCode').value  // ✅ DAGDAG ITO
   })
 })
-    // Create new admin
+    // ✅ Create new admin
     const hashedPassword = await bcrypt.hash(password, 10);
     const admin = new User({
       email: email,
@@ -61,10 +68,12 @@ async function createAdmin() {
     
     await admin.save();
     
-    console.log('✅ Admin account created!');
-    console.log('📧 Email:', email);
-    console.log('🔑 Password:', password);
-    console.log('⚠️  CHANGE PASSWORD AFTER LOGIN!');
+    console.log('✅ Admin account created successfully!');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📧 Email:    ', email);
+    console.log('🔑 Password: ', password);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('⚠️  IMPORTANT: Change password after first login!');
     
     process.exit(0);
   } catch (err) {
