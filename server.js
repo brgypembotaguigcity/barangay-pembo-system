@@ -185,39 +185,45 @@ const paymentSchema = new mongoose.Schema({
 });
 const Payment = mongoose.model('Payment', paymentSchema);
 
-// ==================== RESEND SETUP (FIXED) ====================
+// ==================== NODEMAILER SETUP (GMAIL) ====================
 
-const { Resend } = require('resend');
+// ✅ Create Gmail transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
-// ✅ FIXED: Initialize Resend with proper error handling
-if (!process.env.RESEND_API_KEY) {
-  console.error('❌ CRITICAL: RESEND_API_KEY not found in .env file!');
-  console.error('Please add RESEND_API_KEY=re_xxxxx to your .env file');
-  process.exit(1);
-}
+// ✅ Verify connection
+transporter.verify(function(error, success) {
+  if (error) {
+    console.error('❌ Email configuration error:', error);
+  } else {
+    console.log('✅ Email server is ready to send messages');
+  }
+});
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
+// ✅ Send email function
 const sendEmail = async (mailOptions) => {
   try {
-    // ✅ Use process.env.EMAIL_FROM instead of process.env.EMAIL_FROM
-    const fromEmail = process.env.EMAIL_FROM || 'noreply@barangaypembo.com';
-    
     console.log('📧 Sending email:', {
-      from: fromEmail,
+      from: mailOptions.from || process.env.EMAIL_FROM,
       to: mailOptions.to,
       subject: mailOptions.subject
     });
 
-    const result = await resend.emails.send({
-      from: fromEmail,
+    const result = await transporter.sendMail({
+      from: mailOptions.from || process.env.EMAIL_FROM,
       to: mailOptions.to,
       subject: mailOptions.subject,
-      html: mailOptions.html || mailOptions.text
+      text: mailOptions.text,
+      html: mailOptions.html
     });
     
     console.log(`✅ Email sent successfully to ${mailOptions.to}`);
-    console.log('Response:', result);
+    console.log('Message ID:', result.messageId);
     return result;
   } catch (error) {
     console.error(`❌ Email failed for ${mailOptions.to}:`, error);
