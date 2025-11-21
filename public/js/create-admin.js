@@ -47,7 +47,7 @@ async function createAdmin() {
     }
 
     //
-    fetch('https://barangay-pembo-system.onrender.com/signup', {
+    fetch('https://72.61.124.146:3000/signup', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ 

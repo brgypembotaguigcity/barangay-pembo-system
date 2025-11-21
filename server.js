@@ -24,7 +24,7 @@ app.use(cors({
 app.options('*', cors());
 
 // ✅ LOCAL MONGODB CONNECTION
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/brgypembotaguigcity';
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/brgypembotaguigcity';
 
 console.log('🔗 Connecting to MongoDB...');
 console.log('📍 Database URI:', MONGO_URI);
