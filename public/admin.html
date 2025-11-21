@@ -404,7 +404,44 @@
     </div>
 
     <script>
-    const apiUrl = 'https://barangay-pembo-system.onrender.com';
+    const apiUrl = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : 'https://barangay-pembo-system.onrender.com';
+
+console.log('🌐 API URL:', apiUrl);
+
+// ✅ TEST CONNECTION
+window.addEventListener('load', async function() {
+    const messageElem = document.getElementById('message');
+    
+    try {
+        console.log('🔍 Testing server connection...');
+        const response = await fetch(`${apiUrl}/health`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Server connected:', data);
+            
+            if (messageElem) {
+                messageElem.textContent = '✅ Server connected successfully';
+                messageElem.classList.add('success');
+                setTimeout(() => messageElem.textContent = '', 3000);
+            }
+        } else {
+            throw new Error('Server returned: ' + response.status);
+        }
+    } catch (err) {
+        console.error('❌ Connection failed:', err);
+        
+        if (messageElem) {
+            messageElem.textContent = '⚠️ Cannot connect to server. Check console for details.';
+            messageElem.classList.add('error');
+        }
+    }
+});
 
     function togglePassword(id) {
         const input = document.getElementById(id);
